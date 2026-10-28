@@ -1,0 +1,22 @@
+{
+  "name": "ai-career-skill-roadmap-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Based Career & Skill Roadmap Platform (SPMP Lab 3)",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "preview": "npm run preview --prefix frontend"
+  },
+  "keywords": [
+    "react",
+    "vite",
+    "tailwind",
+    "career-roadmap",
+    "ai-matching",
+    "resume-parser",
+    "skill-gap-analysis"
+  ],
+  "author": "CSRP Team",
+  "license": "MIT"
+}
