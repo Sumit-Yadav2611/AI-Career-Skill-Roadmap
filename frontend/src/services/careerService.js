@@ -75,11 +75,9 @@ export const careerService = {
         })
       }));
 
-      const newReadiness = Math.round((completedMilestones / totalMilestones) * 100);
       const updatedRoadmap = {
         ...roadmap,
-        phases: updatedPhases,
-        readinessScore: Math.max(newReadiness, 40)
+        phases: updatedPhases
       };
 
       const userScope = encodeURIComponent(userId || 'anonymous');
