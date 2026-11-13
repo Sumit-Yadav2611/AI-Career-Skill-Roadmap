@@ -34,7 +34,9 @@ export const ProfilePage = () => {
   });
 
   const [savingAcademic, setSavingAcademic] = useState(false);
+  const [savingSkill, setSavingSkill] = useState(false);
   const [academicSuccess, setAcademicSuccess] = useState(false);
+  const [profileError, setProfileError] = useState('');
 
   // Require users to choose a proficiency and category instead of assuming them.
   const [newSkillName, setNewSkillName] = useState('');
@@ -54,11 +56,19 @@ export const ProfilePage = () => {
 
   const handleSaveAcademic = async (e) => {
     e.preventDefault();
+    setProfileError('');
+    setAcademicSuccess(false);
     setSavingAcademic(true);
     try {
       await updateUserProfile(academicData);
       setAcademicSuccess(true);
       setTimeout(() => setAcademicSuccess(false), 3000);
+    } catch (err) {
+      setProfileError(
+        err?.response?.data?.message ||
+        err?.message ||
+        'Unable to save your academic details. Please try again.'
+      );
     } finally {
       setSavingAcademic(false);
     }
@@ -66,17 +76,49 @@ export const ProfilePage = () => {
 
   const handleAddSkill = async (e) => {
     e.preventDefault();
+    setProfileError('');
     if (!newSkillName.trim() || !newSkillProficiency || !newSkillCategory) return;
 
-    await addSkill({
-      name: newSkillName.trim(),
-      proficiency: newSkillProficiency,
-      category: newSkillCategory
-    });
+    const alreadyExists = (user?.userSkills || []).some(
+      (skill) => skill.name?.trim().toLowerCase() === newSkillName.trim().toLowerCase()
+    );
+    if (alreadyExists) {
+      setProfileError('This skill is already in your profile.');
+      return;
+    }
 
-    setNewSkillName('');
-    setNewSkillProficiency('');
-    setNewSkillCategory('');
+    setSavingSkill(true);
+    try {
+      await addSkill({
+        name: newSkillName.trim(),
+        proficiency: newSkillProficiency,
+        category: newSkillCategory
+      });
+      setNewSkillName('');
+      setNewSkillProficiency('');
+      setNewSkillCategory('');
+    } catch (err) {
+      setProfileError(
+        err?.response?.data?.message ||
+        err?.message ||
+        'Unable to add this skill. Please try again.'
+      );
+    } finally {
+      setSavingSkill(false);
+    }
+  };
+
+  const handleRemoveSkill = async (skillId) => {
+    setProfileError('');
+    try {
+      await removeSkill(skillId);
+    } catch (err) {
+      setProfileError(
+        err?.response?.data?.message ||
+        err?.message ||
+        'Unable to remove this skill. Please try again.'
+      );
+    }
   };
 
   const handleResumeParsed = (result) => {
@@ -85,11 +127,29 @@ export const ProfilePage = () => {
   };
 
   const handleSyncSkills = async (extractedSkills) => {
-    await syncResumeSkills(extractedSkills);
-    setSyncSuccessMsg(
-      `Successfully added ${extractedSkills.length} extracted skills. Review their proficiency in your profile before relying on them for career matching.`
+    setProfileError('');
+    const existingNames = new Set(
+      (user?.userSkills || []).map((skill) => skill.name?.trim().toLowerCase()).filter(Boolean)
     );
-    setTimeout(() => setSyncSuccessMsg(''), 5000);
+    const newSkillCount = extractedSkills.filter(
+      (name) => !existingNames.has(String(name).trim().toLowerCase())
+    ).length;
+
+    try {
+      await syncResumeSkills(extractedSkills);
+      setSyncSuccessMsg(
+        newSkillCount
+          ? `Added ${newSkillCount} skills from your resume. Review each proficiency before using them for career matching.`
+          : 'All extracted skills are already listed in your profile.'
+      );
+      setTimeout(() => setSyncSuccessMsg(''), 5000);
+    } catch (err) {
+      setProfileError(
+        err?.response?.data?.message ||
+        err?.message ||
+        'Unable to add extracted skills to your profile.'
+      );
+    }
   };
 
   return (
@@ -103,8 +163,14 @@ export const ProfilePage = () => {
         </p>
       </div>
 
+      {profileError && (
+        <div role="alert" className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+          {profileError}
+        </div>
+      )}
+
       {syncSuccessMsg && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
+        <div role="status" className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span className="font-semibold">{syncSuccessMsg}</span>
         </div>
@@ -275,7 +341,7 @@ export const ProfilePage = () => {
                 <option value="Tools">Tools</option>
                 <option value="Other">Other</option>
               </select>
-              <Button type="submit" size="sm" className="gap-1.5">
+              <Button type="submit" size="sm" className="gap-1.5" isLoading={savingSkill}>
                 <Plus className="w-3.5 h-3.5" /> Add Skill
               </Button>
             </div>
@@ -301,9 +367,10 @@ export const ProfilePage = () => {
                 </span>
                 <button
                   type="button"
-                  onClick={() => removeSkill(skill.id)}
+                  onClick={() => handleRemoveSkill(skill.id)}
                   className="text-slate-400 hover:text-rose-500 transition-colors p-0.5"
                   title="Remove skill"
+                  aria-label={`Remove ${skill.name}`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
