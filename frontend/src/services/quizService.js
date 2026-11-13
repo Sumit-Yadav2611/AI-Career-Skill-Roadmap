@@ -13,7 +13,8 @@ export const quizService = {
 
   async getQuizById(id) {
     if (isMockMode) {
-      const quiz = mockQuizzes.find((q) => q.id === id) || mockQuizzes[0];
+      const quiz = mockQuizzes.find((item) => item.id === id);
+      if (!quiz) throw new Error(`Assessment "${id}" was not found.`);
       return quiz;
     }
     const response = await api.get(`/quizzes/${id}`);
@@ -23,7 +24,8 @@ export const quizService = {
   async submitQuiz(quizId, userAnswers) {
     if (isMockMode) {
       await new Promise((res) => setTimeout(res, 600));
-      const quiz = mockQuizzes.find((q) => q.id === quizId) || mockQuizzes[0];
+      const quiz = mockQuizzes.find((item) => item.id === quizId);
+      if (!quiz) throw new Error(`Assessment "${quizId}" was not found.`);
       let correctCount = 0;
       const breakdown = quiz.questions.map((q) => {
         const selectedIndex = userAnswers[q.id];
