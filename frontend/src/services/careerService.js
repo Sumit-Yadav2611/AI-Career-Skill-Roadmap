@@ -94,6 +94,7 @@ export const careerService = {
       await new Promise((res) => setTimeout(res, 1400)); // realistic parsing delay
       return {
         ...sampleParsedResume,
+        isDemoData: true,
         fileName: file ? file.name : 'Uploaded_Resume.pdf',
         fileSize: file ? `${(file.size / 1024).toFixed(1)} KB` : '412 KB'
       };
