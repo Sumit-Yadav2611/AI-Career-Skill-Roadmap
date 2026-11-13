@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import {
-  User,
   GraduationCap,
-  Sparkles,
   Plus,
   Trash2,
   Save,
   CheckCircle2,
-  FileText,
   Layers,
-  Award
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
