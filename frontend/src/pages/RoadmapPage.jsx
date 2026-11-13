@@ -6,7 +6,7 @@ import {
   ExternalLink,
   BookOpen
 } from 'lucide-react';
-import { useRoadmap } from '../context/RoadmapContext';
+import { useRoadmap } from '../hooks/useRoadmap';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import ProgressBar from '../components/common/ProgressBar';
