@@ -13,7 +13,7 @@ import Button from '../components/common/Button';
 import ProgressBar from '../components/common/ProgressBar';
 
 export const SkillGapPage = () => {
-  const { careers, activeCareer, activeCareerId, selectTargetCareer, skillGap, loading } = useRoadmap();
+  const { careers, activeCareer, activeCareerId, selectTargetCareer, skillGap, loading, error } = useRoadmap();
   const { user } = useAuth();
 
   const acquiredSkills = skillGap?.acquired || [];
@@ -49,6 +49,12 @@ export const SkillGapPage = () => {
           </select>
         </div>
       </div>
+
+      {error && (
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          {error}
+        </div>
+      )}
 
       {!activeCareer ? (
         <Card className="p-8 text-center">
