@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Compass,
   Bell,
-  Search,
   User,
   LogOut,
   ChevronDown,
