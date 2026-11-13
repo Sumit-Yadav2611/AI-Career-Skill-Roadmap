@@ -16,7 +16,7 @@ export const SkillRadarChart = ({ data = [] }) => {
         <div>
           <p className="text-sm font-semibold text-slate-700">Not enough skill data yet</p>
           <p className="text-xs text-slate-500 mt-1">
-            Add skills to your profile and select a target career to see this comparison.
+            Add skills with proficiency levels to your profile and select a target career to see this comparison.
           </p>
         </div>
       </div>
