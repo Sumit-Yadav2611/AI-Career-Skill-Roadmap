@@ -26,22 +26,38 @@ export const careerService = {
     return calculateSkillGap(userSkills, career.requiredSkills);
   },
 
-  async getRoadmap(careerId) {
+  async getRoadmap(careerId, userId) {
     if (isMockMode) {
-      // Check if user has saved modified roadmap in local storage
-      const stored = localStorage.getItem(`csrp_roadmap_${careerId}`);
+      // Local demo progress is scoped to one account and one target career.
+      const userScope = encodeURIComponent(userId || 'anonymous');
+      const storageKey = `csrp_roadmap_${userScope}_${careerId}`;
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         return JSON.parse(stored);
       }
-      return mockRoadmapData[careerId] || mockRoadmapData['full-stack'];
+
+      const template = mockRoadmapData[careerId] || mockRoadmapData['full-stack'];
+      const roadmap = JSON.parse(JSON.stringify(template));
+
+      // Only the explicitly selected sample account starts with sample progress.
+      // Newly registered students always begin with an empty checklist.
+      if (userId !== 'usr_001') {
+        roadmap.phases.forEach((phase) => {
+          phase.milestones.forEach((milestone) => {
+            milestone.status = 'pending';
+          });
+        });
+      }
+
+      return roadmap;
     }
     const response = await api.get(`/roadmap/${careerId}`);
     return response.data;
   },
 
-  async updateMilestone(careerId, milestoneId, isCompleted) {
+  async updateMilestone(careerId, milestoneId, isCompleted, userId) {
     if (isMockMode) {
-      const roadmap = await this.getRoadmap(careerId);
+      const roadmap = await this.getRoadmap(careerId, userId);
       let totalMilestones = 0;
       let completedMilestones = 0;
 
@@ -66,7 +82,8 @@ export const careerService = {
         readinessScore: Math.max(newReadiness, 40)
       };
 
-      localStorage.setItem(`csrp_roadmap_${careerId}`, JSON.stringify(updatedRoadmap));
+      const userScope = encodeURIComponent(userId || 'anonymous');
+      localStorage.setItem(`csrp_roadmap_${userScope}_${careerId}`, JSON.stringify(updatedRoadmap));
       return updatedRoadmap;
     }
 
