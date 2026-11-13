@@ -12,7 +12,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { useRoadmap } from '../../context/RoadmapContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import ProgressBar from '../common/ProgressBar';
 
 export const Sidebar = ({ isOpen, onClose }) => {
