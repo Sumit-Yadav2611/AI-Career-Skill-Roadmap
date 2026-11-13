@@ -111,7 +111,7 @@ const getPhaseChartData = (roadmap) =>
 
 export const DashboardPage = () => {
   const { user } = useAuth();
-  const { careers, activeCareer, roadmap, skillGap, loading, selectTargetCareer } = useRoadmap();
+  const { careers, activeCareer, roadmap, skillGap, loading, error, selectTargetCareer } = useRoadmap();
 
   const skills = user?.userSkills || [];
   const profile = getProfileCompleteness(user);
@@ -178,6 +178,12 @@ export const DashboardPage = () => {
           </Link>
         </div>
       </div>
+
+      {error && (
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          {error}
+        </div>
+      )}
 
       {isMockMode && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
