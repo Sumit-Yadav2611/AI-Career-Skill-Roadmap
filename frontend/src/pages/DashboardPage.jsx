@@ -12,7 +12,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useRoadmap } from '../context/RoadmapContext';
+import { useRoadmap } from '../hooks/useRoadmap';
 import { isMockMode } from '../services/api';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
