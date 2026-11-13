@@ -13,7 +13,7 @@ import Button from '../components/common/Button';
 import ProgressBar from '../components/common/ProgressBar';
 
 export const RoadmapPage = () => {
-  const { roadmap, activeCareer, careers, activeCareerId, selectTargetCareer, toggleMilestone, loading } = useRoadmap();
+  const { roadmap, activeCareer, careers, activeCareerId, selectTargetCareer, toggleMilestone, loading, error } = useRoadmap();
 
   if (loading) {
     return (
@@ -97,6 +97,12 @@ export const RoadmapPage = () => {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
+          {error}
+        </div>
+      )}
 
       <div className="flex justify-end">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
