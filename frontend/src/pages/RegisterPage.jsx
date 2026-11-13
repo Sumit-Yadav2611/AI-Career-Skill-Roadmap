@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRoadmap } from '../context/RoadmapContext';
+import { isMockMode } from '../services/api';
 import Button from '../components/common/Button';
 import FormInput from '../components/common/FormInput';
 
@@ -119,6 +120,12 @@ export const RegisterPage = () => {
               </Link>
             </p>
           </div>
+
+          {isMockMode && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+              Development-only account: the profile is saved in this browser and the password is not verified. Do not enter real credentials or sensitive personal information.
+            </div>
+          )}
 
           {error && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
