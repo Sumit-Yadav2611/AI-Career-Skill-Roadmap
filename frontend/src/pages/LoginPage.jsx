@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { isMockMode } from '../services/api';
 import Button from '../components/common/Button';
 import FormInput from '../components/common/FormInput';
