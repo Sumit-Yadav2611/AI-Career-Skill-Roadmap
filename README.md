@@ -42,9 +42,13 @@ Open the local URL printed by Vite (normally `http://localhost:5173`).
 To verify the production bundle:
 
 ```powershell
+npm test
+npm run lint
 npm run build
 npm run preview
 ```
+
+The unit tests use Node.js's built-in test runner and do not require an extra test framework.
 
 ## Development demo mode
 
@@ -57,7 +61,7 @@ VITE_USE_MOCK=true
 
 Mock mode is enabled only when running the Vite development server. Production builds always use the API, even when `VITE_USE_MOCK=true` is accidentally configured.
 
-The login screen exposes a clearly labeled demo-account option in development. Demo career data, questions, assessment suggestions, and resume previews are illustrative sample data. A resume upload in mock mode does **not** parse or upload the selected PDF. Do not treat demo data as a real assessment, resume analysis, or AI-generated recommendation.
+The login screen exposes a clearly labeled demo-account option in development. Local demo profiles are kept in this browser so you can sign out and sign in again; demo mode does not verify passwords and is not secure authentication. Do not enter real passwords or sensitive personal information. Demo career data, questions, assessment suggestions, and resume previews are illustrative sample data. A resume upload in mock mode does **not** parse or upload the selected PDF. Do not treat demo data as a real assessment, resume analysis, or AI-generated recommendation.
 
 Newly registered demo users start with an empty skill list and roadmap checklist. Mock roadmap progress is scoped to the current local account and target career.
 
