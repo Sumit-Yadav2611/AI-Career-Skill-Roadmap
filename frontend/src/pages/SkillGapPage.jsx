@@ -5,7 +5,7 @@ import {
   AlertCircle,
   ArrowRight
 } from 'lucide-react';
-import { useRoadmap } from '../context/RoadmapContext';
+import { useRoadmap } from '../hooks/useRoadmap';
 import { useAuth } from '../hooks/useAuth';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
