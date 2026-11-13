@@ -1,14 +1,13 @@
 import React, { useState, useRef } from 'react';
 import {
   UploadCloud,
-  FileText,
-  CheckCircle2,
+  FileCheck,
   AlertCircle,
   Sparkles,
-  RefreshCw,
-  FileCheck
+  RefreshCw
 } from 'lucide-react';
 import { careerService } from '../../services/careerService';
+import { isMockMode } from '../../services/api';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
@@ -35,8 +34,11 @@ export const ResumeUploader = ({ onResumeParsed }) => {
     setError('');
     if (!selectedFile) return;
 
-    if (!selectedFile.name.endsWith('.pdf') && selectedFile.type !== 'application/pdf') {
-      setError('Only PDF resumes are supported. Please upload a .pdf file.');
+    const hasPdfExtension = selectedFile.name.toLowerCase().endsWith('.pdf');
+    const hasPdfMimeType = selectedFile.type === 'application/pdf';
+
+    if (!hasPdfExtension || (selectedFile.type && !hasPdfMimeType)) {
+      setError('Please select a valid PDF file.');
       return;
     }
 
@@ -62,26 +64,30 @@ export const ResumeUploader = ({ onResumeParsed }) => {
     if (e.target.files && e.target.files[0]) {
       validateAndProcessFile(e.target.files[0]);
     }
+    // Allow selecting the same file again after a failed upload.
+    e.target.value = '';
   };
 
   const uploadAndParse = async (targetFile) => {
     try {
       setIsUploading(true);
-      setParseStatus('Extracting text content via pdfplumber...');
-      await new Promise((res) => setTimeout(res, 600));
+      setParseStatus(
+        isMockMode
+          ? 'Preparing a sample result. The uploaded file is not parsed in demo mode.'
+          : 'Uploading your PDF to the resume parsing service...'
+      );
 
-      setParseStatus('Running spaCy Named Entity Recognition on skills...');
-      await new Promise((res) => setTimeout(res, 700));
-
-      setParseStatus('Benchmarking against career requirement matrix...');
       const result = await careerService.parseResume(targetFile);
 
-      setParseStatus('Done!');
+      setParseStatus(isMockMode ? 'Sample preview ready.' : 'Resume analysis completed.');
       if (onResumeParsed) {
         onResumeParsed(result);
       }
     } catch (err) {
-      setError('Failed to parse resume. Please ensure the PDF has readable text.');
+      setError(
+        err?.response?.data?.message ||
+        'Resume analysis failed. Please check the PDF and try again.'
+      );
     } finally {
       setIsUploading(false);
     }
@@ -89,20 +95,26 @@ export const ResumeUploader = ({ onResumeParsed }) => {
 
   return (
     <Card className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-3">
         <div>
           <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-brand-600" />
-            AI Resume Analyzer (NLP Engine)
+            Resume Analyzer
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Extracts tech skills, education, and projects according to SPMP Lab 3 specs.
+            Upload a PDF resume to review extracted profile information and skills.
           </p>
         </div>
-        <Badge variant="indigo" size="sm">
-          pdfplumber + spaCy
+        <Badge variant={isMockMode ? 'amber' : 'indigo'} size="sm">
+          {isMockMode ? 'Demo data' : 'API mode'}
         </Badge>
       </div>
+
+      {isMockMode && (
+        <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+          Development demo mode: the file is not parsed or uploaded. The preview contains sample data and must not be treated as your resume analysis.
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
@@ -111,13 +123,21 @@ export const ResumeUploader = ({ onResumeParsed }) => {
         </div>
       )}
 
-      {/* Drag & Drop Area */}
       <div
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Select or drop a PDF resume"
         className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 ${
           dragActive
             ? 'border-brand-500 bg-brand-50/50 scale-[1.01]'
@@ -154,26 +174,27 @@ export const ResumeUploader = ({ onResumeParsed }) => {
         </div>
       </div>
 
-      {/* Parsing progress status */}
       {isUploading && (
-        <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3 animate-pulse">
+        <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-3">
           <RefreshCw className="w-5 h-5 text-brand-600 animate-spin" />
           <div className="text-xs">
-            <p className="font-bold text-slate-800">Processing Resume with NLP</p>
+            <p className="font-bold text-slate-800">
+              {isMockMode ? 'Preparing demo preview' : 'Analyzing resume'}
+            </p>
             <p className="text-slate-500">{parseStatus}</p>
           </div>
         </div>
       )}
 
       {file && !isUploading && (
-        <div className="mt-4 flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
-          <div className="flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-emerald-600" />
-            <span className="font-semibold">{file.name}</span>
-            <span className="text-emerald-600">({(file.size / 1024).toFixed(1)} KB)</span>
+        <div className="mt-4 flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <FileCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold truncate">{file.name}</span>
+            <span className="text-emerald-600 shrink-0">({(file.size / 1024).toFixed(1)} KB)</span>
           </div>
-          <Badge variant="emerald" size="sm">
-            Parsed & Ready
+          <Badge variant={isMockMode ? 'amber' : 'emerald'} size="sm">
+            {isMockMode ? 'Sample preview' : 'Analyzed'}
           </Badge>
         </div>
       )}
