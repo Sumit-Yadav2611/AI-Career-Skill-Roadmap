@@ -22,26 +22,25 @@ import ParsedPreviewModal from '../components/resume/ParsedPreviewModal';
 export const ProfilePage = () => {
   const { user, updateUserProfile, addSkill, removeSkill, syncResumeSkills } = useAuth();
 
-  // Academic Form state
+  // Only prefill information the current user has actually provided.
   const [academicData, setAcademicData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     college: user?.college || '',
-    degree: user?.degree || 'B.Tech in Computer Science',
-    branch: user?.branch || 'Computer Science',
-    semester: user?.semester || '6th Semester',
-    cgpa: user?.cgpa || '8.45',
+    degree: user?.degree || '',
+    branch: user?.branch || '',
+    semester: user?.semester || '',
+    cgpa: user?.cgpa || '',
   });
 
   const [savingAcademic, setSavingAcademic] = useState(false);
   const [academicSuccess, setAcademicSuccess] = useState(false);
 
-  // New Skill state
+  // Require users to choose a proficiency and category instead of assuming them.
   const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillProficiency, setNewSkillProficiency] = useState('Intermediate');
-  const [newSkillCategory, setNewSkillCategory] = useState('Frontend');
+  const [newSkillProficiency, setNewSkillProficiency] = useState('');
+  const [newSkillCategory, setNewSkillCategory] = useState('');
 
-  // Resume parsed state
   const [parsedData, setParsedData] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
@@ -67,7 +66,7 @@ export const ProfilePage = () => {
 
   const handleAddSkill = async (e) => {
     e.preventDefault();
-    if (!newSkillName.trim()) return;
+    if (!newSkillName.trim() || !newSkillProficiency || !newSkillCategory) return;
 
     await addSkill({
       name: newSkillName.trim(),
@@ -76,6 +75,8 @@ export const ProfilePage = () => {
     });
 
     setNewSkillName('');
+    setNewSkillProficiency('');
+    setNewSkillCategory('');
   };
 
   const handleResumeParsed = (result) => {
@@ -85,19 +86,20 @@ export const ProfilePage = () => {
 
   const handleSyncSkills = async (extractedSkills) => {
     await syncResumeSkills(extractedSkills);
-    setSyncSuccessMsg(`Successfully synced ${extractedSkills.length} skills from resume into your profile!`);
-    setTimeout(() => setSyncSuccessMsg(''), 4000);
+    setSyncSuccessMsg(
+      `Successfully added ${extractedSkills.length} extracted skills. Review their proficiency in your profile before relying on them for career matching.`
+    );
+    setTimeout(() => setSyncSuccessMsg(''), 5000);
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
           Student Profile & Resume Center
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Manage your academic background, active skill inventory, and AI resume parsing.
+          Manage your academic background, active skill inventory, and resume information.
         </p>
       </div>
 
@@ -108,12 +110,9 @@ export const ProfilePage = () => {
         </div>
       )}
 
-      {/* Resume Upload Section */}
       <ResumeUploader onResumeParsed={handleResumeParsed} />
 
-      {/* Grid: Academic Form & Skill Tags */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Academic Form */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
@@ -157,15 +156,29 @@ export const ProfilePage = () => {
               onChange={handleAcademicChange}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Degree & Branch
+                  Degree
                 </label>
                 <input
                   name="degree"
                   value={academicData.degree}
                   onChange={handleAcademicChange}
+                  placeholder="e.g. B.Tech"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                  Branch
+                </label>
+                <input
+                  name="branch"
+                  value={academicData.branch}
+                  onChange={handleAcademicChange}
+                  placeholder="e.g. Computer Science"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
@@ -178,12 +191,11 @@ export const ProfilePage = () => {
                   name="semester"
                   value={academicData.semester}
                   onChange={handleAcademicChange}
+                  placeholder="e.g. 5th Semester"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
                   CGPA / Percentage
@@ -193,6 +205,7 @@ export const ProfilePage = () => {
                   type="text"
                   value={academicData.cgpa}
                   onChange={handleAcademicChange}
+                  placeholder="Enter your actual score"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
@@ -209,7 +222,6 @@ export const ProfilePage = () => {
           </form>
         </Card>
 
-        {/* Right: Skills Inventory */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
@@ -223,35 +235,52 @@ export const ProfilePage = () => {
             </Badge>
           </div>
 
-          {/* Add Skill Form */}
           <form onSubmit={handleAddSkill} className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
             <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
               Add New Technical Skill
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 placeholder="Skill name (e.g. Docker)"
                 value={newSkillName}
                 onChange={(e) => setNewSkillName(e.target.value)}
+                required
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <select
                 value={newSkillProficiency}
                 onChange={(e) => setNewSkillProficiency(e.target.value)}
+                required
                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
+                <option value="" disabled>Select proficiency</option>
                 <option value="Beginner">Beginner</option>
                 <option value="Intermediate">Intermediate</option>
                 <option value="Advanced">Advanced</option>
               </select>
+              <select
+                value={newSkillCategory}
+                onChange={(e) => setNewSkillCategory(e.target.value)}
+                required
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              >
+                <option value="" disabled>Select category</option>
+                <option value="Programming Language">Programming Language</option>
+                <option value="Frontend">Frontend</option>
+                <option value="Backend">Backend</option>
+                <option value="Database">Database</option>
+                <option value="DevOps & Cloud">DevOps & Cloud</option>
+                <option value="Data & AI">Data & AI</option>
+                <option value="Tools">Tools</option>
+                <option value="Other">Other</option>
+              </select>
               <Button type="submit" size="sm" className="gap-1.5">
-                <Plus className="w-3.5 h-3.5" /> Add Tag
+                <Plus className="w-3.5 h-3.5" /> Add Skill
               </Button>
             </div>
           </form>
 
-          {/* Existing Skills List */}
           <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto p-1">
             {(user?.userSkills || []).map((skill) => (
               <div
@@ -280,11 +309,15 @@ export const ProfilePage = () => {
                 </button>
               </div>
             ))}
+            {(user?.userSkills || []).length === 0 && (
+              <p className="text-xs text-slate-500 py-3">
+                No skills added yet. Add skills you can describe or demonstrate.
+              </p>
+            )}
           </div>
         </Card>
       </div>
 
-      {/* Resume Parsed Preview Modal */}
       <ParsedPreviewModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
