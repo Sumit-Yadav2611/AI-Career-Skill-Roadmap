@@ -6,7 +6,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useRoadmap } from '../context/RoadmapContext';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
