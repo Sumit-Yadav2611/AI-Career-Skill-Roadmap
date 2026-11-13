@@ -57,7 +57,7 @@ export const LandingPage = () => {
     {
       step: '02',
       title: 'Take Domain Assessment Quizzes',
-      desc: 'Attempt adaptive multiple-choice questions to validate your real-world proficiency.'
+      desc: 'Attempt multiple-choice assessments to review your current understanding of selected domains.'
     },
     {
       step: '03',
@@ -88,7 +88,7 @@ export const LandingPage = () => {
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-brand-200/80 shadow-xs mb-8 animate-in fade-in slide-in-from-bottom-2">
           <Sparkles className="w-4 h-4 text-brand-600" />
           <span className="text-xs font-bold text-brand-800">
-            AI-Powered Career & Skill Roadmap Platform
+            Career & Skill Roadmap Platform
           </span>
           <Badge variant="indigo" size="sm">
             Career Planning
