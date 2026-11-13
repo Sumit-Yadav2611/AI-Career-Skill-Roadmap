@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation, Link, useNavigate, Navigate } from 'react-router-dom';
+import { useLocation, Link, Navigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import {
   Award,
@@ -15,12 +15,10 @@ import {
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
-import ProgressBar from '../components/common/ProgressBar';
 import { isMockMode } from '../services/api';
 
 export const QuizResultPage = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Results must come from a completed assessment; never invent a fallback result.
   const result = location.state?.result;
