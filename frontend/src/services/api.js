@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-export const isMockMode = import.meta.env.VITE_USE_MOCK !== 'false';
+
+// Mock data is a development-only convenience. A production build must always
+// use the configured API, even if VITE_USE_MOCK was accidentally set to true.
+export const isMockMode =
+  import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === 'true';
 
 const api = axios.create({
   baseURL,
@@ -28,7 +32,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear token and optionally redirect to login
       localStorage.removeItem('csrp_token');
       localStorage.removeItem('csrp_user');
       if (window.location.pathname !== '/login') {
