@@ -60,17 +60,14 @@ export const careerService = {
   async updateMilestone(careerId, milestoneId, isCompleted, userId) {
     if (isMockMode) {
       const roadmap = await this.getRoadmap(careerId, userId);
-      let completedMilestones = 0;
 
       const updatedPhases = roadmap.phases.map((phase) => ({
         ...phase,
         milestones: phase.milestones.map((m) => {
           if (m.id === milestoneId) {
             const nextStatus = isCompleted ? 'completed' : 'pending';
-            if (nextStatus === 'completed') completedMilestones++;
             return { ...m, status: nextStatus };
           }
-          if (m.status === 'completed') completedMilestones++;
           return m;
         })
       }));
