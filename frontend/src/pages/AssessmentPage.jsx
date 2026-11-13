@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BrainCircuit,
@@ -30,12 +30,21 @@ export const AssessmentPage = () => {
   const [userAnswers, setUserAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const submissionStarted = useRef(false);
 
   useEffect(() => {
     const loadQuizzes = async () => {
       try {
+        setError('');
         const data = await quizService.getQuizzes();
-        setQuizzes(data);
+        setQuizzes(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(
+          err?.response?.data?.message ||
+          err?.message ||
+          'Unable to load assessments. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
@@ -44,6 +53,8 @@ export const AssessmentPage = () => {
   }, []);
 
   const handleStartQuiz = (quiz) => {
+    setError('');
+    submissionStarted.current = false;
     setSelectedQuiz(quiz);
     setCurrentQuestionIndex(0);
     setUserAnswers({});
@@ -57,7 +68,9 @@ export const AssessmentPage = () => {
   };
 
   const handleSubmitQuiz = async () => {
-    if (!selectedQuiz) return;
+    if (!selectedQuiz || submissionStarted.current) return;
+    submissionStarted.current = true;
+    setError('');
     setSubmitting(true);
     try {
       const result = await quizService.submitQuiz(selectedQuiz.id, userAnswers);
@@ -79,6 +92,13 @@ export const AssessmentPage = () => {
       }
 
       navigate('/assessment/result', { state: { result } });
+    } catch (err) {
+      submissionStarted.current = false;
+      setError(
+        err?.response?.data?.message ||
+        err?.message ||
+        'Unable to submit this assessment. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -100,7 +120,21 @@ export const AssessmentPage = () => {
           </p>
         </div>
 
-        {/* Quizzes Grid */}
+        {error && (
+          <div role="alert" className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="py-16 text-center text-sm text-slate-500">Loading available assessments...</div>
+        ) : quizzes.length === 0 ? (
+          <Card className="p-8 text-center">
+            <h3 className="text-base font-bold text-slate-900">No assessments available</h3>
+            <p className="text-xs text-slate-500 mt-2">There are no assessments available right now. Please try again later.</p>
+          </Card>
+        ) : (
+        /* Quizzes Grid */
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {quizzes.map((quiz) => (
             <Card key={quiz.id} hover className="p-6 flex flex-col justify-between">
@@ -143,6 +177,7 @@ export const AssessmentPage = () => {
             </Card>
           ))}
         </div>
+        )}
       </div>
     );
   }
@@ -155,6 +190,12 @@ export const AssessmentPage = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+      {error && (
+        <div role="alert" className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+          {error}
+        </div>
+      )}
+
       {/* Quiz Header Bar */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
