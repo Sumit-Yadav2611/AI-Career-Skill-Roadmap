@@ -71,6 +71,10 @@ export const authService = {
         notifications: [],
       };
 
+      // Never persist submitted credentials in the browser-side demo profile.
+      delete user.password;
+      delete user.confirmPassword;
+
       const token = createMockToken(user.email);
       localStorage.setItem('csrp_token', token);
       localStorage.setItem('csrp_user', JSON.stringify(user));
