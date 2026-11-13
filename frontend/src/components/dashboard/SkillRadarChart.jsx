@@ -9,16 +9,20 @@ import {
   Tooltip
 } from 'recharts';
 
-const defaultSkillData = [
-  { subject: 'Frontend', current: 85, required: 90, fullMark: 100 },
-  { subject: 'Backend', current: 75, required: 85, fullMark: 100 },
-  { subject: 'Database', current: 60, required: 80, fullMark: 100 },
-  { subject: 'DevOps & Cloud', current: 45, required: 75, fullMark: 100 },
-  { subject: 'DSA & Core', current: 70, required: 80, fullMark: 100 },
-  { subject: 'System Design', current: 50, required: 70, fullMark: 100 },
-];
+export const SkillRadarChart = ({ data = [] }) => {
+  if (!data.length) {
+    return (
+      <div className="w-full h-72 flex items-center justify-center rounded-xl bg-slate-50 border border-dashed border-slate-200 px-6 text-center">
+        <div>
+          <p className="text-sm font-semibold text-slate-700">Not enough skill data yet</p>
+          <p className="text-xs text-slate-500 mt-1">
+            Add skills to your profile and select a target career to see this comparison.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-export const SkillRadarChart = ({ data = defaultSkillData }) => {
   return (
     <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="100%">
@@ -35,33 +39,26 @@ export const SkillRadarChart = ({ data = defaultSkillData }) => {
           />
           <Tooltip
             content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div className="bg-slate-900 text-white text-xs p-2.5 rounded-xl shadow-lg border border-slate-700">
-                    <p className="font-bold">{payload[0]?.payload?.subject}</p>
-                    <p className="text-emerald-400 mt-1">
-                      Current Score: {payload[0]?.value}%
-                    </p>
-                    {payload[1] && (
-                      <p className="text-indigo-300">
-                        Target Industry: {payload[1]?.value}%
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-              return null;
+              if (!active || !payload?.length) return null;
+              const point = payload[0]?.payload;
+              return (
+                <div className="bg-slate-900 text-white text-xs p-2.5 rounded-xl shadow-lg border border-slate-700">
+                  <p className="font-bold">{point?.subject}</p>
+                  <p className="text-brand-300 mt-1">Profile-listed level: {point?.current}%</p>
+                  <p className="text-emerald-400">Role requirement: {point?.required}%</p>
+                </div>
+              );
             }}
           />
           <Radar
-            name="Your Skills"
+            name="Profile-listed skills"
             dataKey="current"
             stroke="#6366f1"
             fill="#6366f1"
             fillOpacity={0.35}
           />
           <Radar
-            name="Target Benchmark"
+            name="Role requirement"
             dataKey="required"
             stroke="#10b981"
             fill="#10b981"
@@ -72,4 +69,5 @@ export const SkillRadarChart = ({ data = defaultSkillData }) => {
     </div>
   );
 };
+
 export default SkillRadarChart;
