@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link, useNavigate, Navigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import {
   Award,
@@ -16,72 +16,28 @@ import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import ProgressBar from '../components/common/ProgressBar';
+import { isMockMode } from '../services/api';
 
 export const QuizResultPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fallback demo result if navigated directly
-  const result = location.state?.result || {
-    quizTitle: 'Full-Stack Web Development',
-    totalQuestions: 5,
-    correctCount: 4,
-    scorePercentage: 80,
-    recommendedCareer: 'Full-Stack Web Developer',
-    confidence: 88,
-    breakdown: [
-      {
-        question: 'Which React hook should be used to perform side effects such as fetching data from an API?',
-        options: ['useState', 'useEffect', 'useContext', 'useReducer'],
-        selectedIndex: 1,
-        correctIndex: 1,
-        isCorrect: true,
-        explanation: 'useEffect handles side-effects like data fetching, manual DOM manipulation, and subscriptions in functional components.'
-      },
-      {
-        question: 'What is the primary role of middleware in Express.js?',
-        options: ['Direct database indexing', 'To execute code and modify req/res objects', 'To compile JSX', 'Manage browser cookies exclusively'],
-        selectedIndex: 1,
-        correctIndex: 1,
-        isCorrect: true,
-        explanation: 'Middleware functions have access to the request and response objects in Express.'
-      },
-      {
-        question: 'Which HTTP method should be used for idempotent updates where the entire resource is replaced?',
-        options: ['POST', 'PATCH', 'PUT', 'DELETE'],
-        selectedIndex: 2,
-        correctIndex: 2,
-        isCorrect: true,
-        explanation: 'PUT is idempotent and replaces the target resource entirely.'
-      },
-      {
-        question: 'In MongoDB, what does indexing on a collection field primarily improve?',
-        options: ['Query execution speed', 'Storage compression', 'Write speed on bulk inserts', 'Encryption speed'],
-        selectedIndex: 0,
-        correctIndex: 0,
-        isCorrect: true,
-        explanation: 'Indexes optimize search queries by avoiding full collection scans.'
-      },
-      {
-        question: 'What is the virtual DOM in React?',
-        options: ['A direct replica in C++', 'An in-memory representation that optimizes UI re-rendering', 'An external cloud DB', 'A Chrome engine feature'],
-        selectedIndex: 0,
-        correctIndex: 1,
-        isCorrect: false,
-        explanation: 'The Virtual DOM keeps a representation of UI components in memory and syncs with the real DOM efficiently through reconciliation diffing.'
-      }
-    ]
-  };
+  // Results must come from a completed assessment; never invent a fallback result.
+  const result = location.state?.result;
 
   useEffect(() => {
-    if (result.scorePercentage >= 70) {
+    if (result?.scorePercentage >= 70) {
       confetti({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 }
       });
     }
-  }, [result.scorePercentage]);
+  }, [result?.scorePercentage]);
+
+  if (!result) {
+    return <Navigate to="/assessment" replace />;
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -92,7 +48,7 @@ export const QuizResultPage = () => {
         </div>
 
         <Badge variant={result.scorePercentage >= 75 ? 'emerald' : 'amber'} size="md" className="mb-2">
-          Assessment Completed
+          {isMockMode ? "Demo assessment result" : "Assessment completed"}
         </Badge>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -114,7 +70,7 @@ export const QuizResultPage = () => {
           <div className="w-px h-10 bg-slate-200 hidden sm:block" />
           <div>
             <span className="text-3xl font-black text-brand-600">{result.confidence}%</span>
-            <span className="block text-xs text-slate-500 font-medium">AI Career Fit</span>
+            <span className="block text-xs text-slate-500 font-medium">{isMockMode ? "Demo suggestion score" : "Recommendation score"}</span>
           </div>
         </div>
 
@@ -126,7 +82,7 @@ export const QuizResultPage = () => {
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Recommended Career Role
+                {isMockMode ? "Sample career suggestion" : "Career recommendation"}
               </p>
               <p className="text-sm font-extrabold text-slate-900">
                 {result.recommendedCareer}
