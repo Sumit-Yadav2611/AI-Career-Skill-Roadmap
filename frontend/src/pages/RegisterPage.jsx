@@ -11,7 +11,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useRoadmap } from '../context/RoadmapContext';
+import { useRoadmap } from '../hooks/useRoadmap';
 import { isMockMode } from '../services/api';
 import Button from '../components/common/Button';
 import FormInput from '../components/common/FormInput';
