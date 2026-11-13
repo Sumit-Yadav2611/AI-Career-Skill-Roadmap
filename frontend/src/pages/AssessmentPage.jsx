@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BrainCircuit,
   Clock,
-  Award,
   ArrowRight,
   ArrowLeft,
   CheckCircle2,
   HelpCircle,
-  Sparkles,
-  Layers,
-  AlertCircle
 } from 'lucide-react';
 import { quizService } from '../services/quizService';
 import { useAuth } from '../context/AuthContext';
