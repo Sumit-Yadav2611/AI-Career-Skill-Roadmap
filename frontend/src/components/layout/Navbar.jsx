@@ -11,7 +11,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useRoadmap } from '../../context/RoadmapContext';
+import { useRoadmap } from '../../hooks/useRoadmap';
 import Badge from '../common/Badge';
 
 export const Navbar = ({ onToggleSidebar }) => {
