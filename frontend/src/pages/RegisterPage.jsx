@@ -11,12 +11,13 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { mockCareers } from '../services/mockData';
+import { useRoadmap } from '../context/RoadmapContext';
 import Button from '../components/common/Button';
 import FormInput from '../components/common/FormInput';
 
 export const RegisterPage = () => {
   const { register } = useAuth();
+  const { careers } = useRoadmap();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -25,11 +26,11 @@ export const RegisterPage = () => {
     password: '',
     confirmPassword: '',
     college: '',
-    degree: 'B.Tech in Computer Science',
-    branch: 'Computer Science',
-    semester: '6th Semester',
-    cgpa: '8.2',
-    targetCareerId: 'full-stack'
+    degree: '',
+    branch: '',
+    semester: '',
+    cgpa: '',
+    targetCareerId: ''
   });
 
   const [error, setError] = useState('');
@@ -94,7 +95,7 @@ export const RegisterPage = () => {
               Begin Your Placement Readiness Journey.
             </h2>
             <p className="mt-3 text-xs text-slate-300 leading-relaxed">
-              Complete your student profile to allow our ML model to accurately benchmark your skills against industry standards.
+              Create your account first, then add your academic details, skills, and career interests to personalize your workspace.
             </p>
           </div>
         </div>
@@ -205,9 +206,11 @@ export const RegisterPage = () => {
                       onChange={handleChange}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
-                      <option value="B.Tech in Computer Science">B.Tech (CSE)</option>
-                      <option value="B.Tech in Information Tech">B.Tech (IT)</option>
+                      <option value="" disabled>Select degree</option>
+                      <option value="B.Tech">B.Tech</option>
+                      <option value="B.E.">B.E.</option>
                       <option value="BCA">BCA</option>
+                      <option value="B.Sc">B.Sc</option>
                       <option value="MCA">MCA</option>
                       <option value="M.Tech">M.Tech</option>
                     </select>
@@ -223,6 +226,10 @@ export const RegisterPage = () => {
                       onChange={handleChange}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
+                      <option value="" disabled>Select semester</option>
+                      <option value="1st Semester">1st Sem</option>
+                      <option value="2nd Semester">2nd Sem</option>
+                      <option value="3rd Semester">3rd Sem</option>
                       <option value="4th Semester">4th Sem</option>
                       <option value="5th Semester">5th Sem</option>
                       <option value="6th Semester">6th Sem</option>
@@ -243,6 +250,7 @@ export const RegisterPage = () => {
                       max="10"
                       value={formData.cgpa}
                       onChange={handleChange}
+                      placeholder="Enter actual CGPA"
                       className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
@@ -250,7 +258,21 @@ export const RegisterPage = () => {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Target Career Role
+                    Branch / Specialization
+                  </label>
+                  <input
+                    name="branch"
+                    type="text"
+                    value={formData.branch}
+                    onChange={handleChange}
+                    placeholder="e.g. Computer Science"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Target Career Role (Optional)
                   </label>
                   <select
                     name="targetCareerId"
@@ -258,9 +280,10 @@ export const RegisterPage = () => {
                     onChange={handleChange}
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
                   >
-                    {mockCareers.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title} ({c.demand} Demand)
+                    <option value="">Choose later</option>
+                    {careers.map((career) => (
+                      <option key={career.id} value={career.id}>
+                        {career.title}
                       </option>
                     ))}
                   </select>
