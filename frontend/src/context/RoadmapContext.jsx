@@ -8,52 +8,79 @@ const RoadmapContext = createContext(null);
 export const RoadmapProvider = ({ children }) => {
   const { user, updateUserProfile } = useAuth();
   const [careers, setCareers] = useState([]);
-  const [activeCareerId, setActiveCareerId] = useState('full-stack');
+  const [activeCareerId, setActiveCareerId] = useState(user?.targetCareerId || null);
   const [activeCareer, setActiveCareer] = useState(null);
   const [roadmap, setRoadmap] = useState(null);
   const [skillGap, setSkillGap] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load careers
+  // Load available careers. A new user must explicitly choose a target role.
   useEffect(() => {
+    let cancelled = false;
+
     const fetchCareers = async () => {
       try {
         const data = await careerService.getCareers();
-        setCareers(data);
-        if (user?.targetCareerId) {
-          setActiveCareerId(user.targetCareerId);
-        }
+        if (cancelled) return;
+        setCareers(Array.isArray(data) ? data : []);
+        setActiveCareerId(user?.targetCareerId || null);
       } catch (err) {
-        console.error('Failed to fetch careers', err);
+        if (!cancelled) {
+          console.error('Failed to fetch careers', err);
+          setCareers([]);
+        }
       }
     };
+
     fetchCareers();
+    return () => {
+      cancelled = true;
+    };
   }, [user?.targetCareerId]);
 
-  // Update active career and load roadmap & skill gap
+  // Load details only after the student has selected a target role.
   useEffect(() => {
+    let cancelled = false;
+
     const loadCareerDetails = async () => {
-      if (!activeCareerId) return;
+      if (!activeCareerId) {
+        setActiveCareer(null);
+        setRoadmap(null);
+        setSkillGap(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const career = await careerService.getCareerById(activeCareerId);
+        if (cancelled) return;
         setActiveCareer(career);
 
-        const rm = await careerService.getRoadmap(activeCareerId);
-        setRoadmap(rm);
+        const [rm, gap] = await Promise.all([
+          careerService.getRoadmap(activeCareerId),
+          careerService.getSkillGap(activeCareerId, user?.userSkills || [])
+        ]);
 
-        if (user?.userSkills) {
-          const gap = await careerService.getSkillGap(activeCareerId, user.userSkills);
-          setSkillGap(gap);
-        }
+        if (cancelled) return;
+        setRoadmap(rm);
+        setSkillGap(gap);
       } catch (err) {
-        console.error('Error loading roadmap/skill gap', err);
+        if (!cancelled) {
+          console.error('Error loading roadmap/skill gap', err);
+          setActiveCareer(null);
+          setRoadmap(null);
+          setSkillGap(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadCareerDetails();
+    return () => {
+      cancelled = true;
+    };
   }, [activeCareerId, user?.userSkills]);
 
   const selectTargetCareer = async (careerId) => {
@@ -76,13 +103,9 @@ export const RoadmapProvider = ({ children }) => {
           colors: ['#6366f1', '#10b981', '#f59e0b']
         });
       }
-
-      // Update user career readiness in profile
-      if (updated.readinessScore && user) {
-        await updateUserProfile({ careerReadiness: updated.readinessScore });
-      }
     } catch (err) {
       console.error('Failed to update milestone', err);
+      throw err;
     }
   };
 
