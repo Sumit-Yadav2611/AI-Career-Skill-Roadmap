@@ -10,7 +10,7 @@ import {
   ArrowRight,
   AlertCircle
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useRoadmap } from '../context/RoadmapContext';
 import { isMockMode } from '../services/api';
 import Button from '../components/common/Button';
