@@ -11,7 +11,7 @@ import {
   ChevronRight,
   GraduationCap
 } from 'lucide-react';
-import { useRoadmap } from '../../context/RoadmapContext';
+import { useRoadmap } from '../../hooks/useRoadmap';
 import { useAuth } from '../../hooks/useAuth';
 import ProgressBar from '../common/ProgressBar';
 
