@@ -58,7 +58,7 @@ export const RoadmapProvider = ({ children }) => {
         setActiveCareer(career);
 
         const [rm, gap] = await Promise.all([
-          careerService.getRoadmap(activeCareerId),
+          careerService.getRoadmap(activeCareerId, user?.id || user?.email),
           careerService.getSkillGap(activeCareerId, user?.userSkills || [])
         ]);
 
@@ -92,7 +92,7 @@ export const RoadmapProvider = ({ children }) => {
 
   const toggleMilestone = async (milestoneId, isCompleted) => {
     try {
-      const updated = await careerService.updateMilestone(activeCareerId, milestoneId, isCompleted);
+      const updated = await careerService.updateMilestone(activeCareerId, milestoneId, isCompleted, user?.id || user?.email);
       setRoadmap(updated);
 
       if (isCompleted) {
