@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isMockMode } from '../services/api';
+import { isMockMode } from '../services/api';
 import Button from '../components/common/Button';
 import FormInput from '../components/common/FormInput';
 
@@ -139,6 +140,12 @@ export const LoginPage = () => {
                 1-Click Demo
               </Button>
             </div>
+          )}
+
+          {isMockMode && (
+            <p className="text-[11px] leading-relaxed text-amber-700">
+              Development-only: local demo accounts do not verify passwords and profile data stays in this browser. Do not enter a real password or sensitive personal information.
+            </p>
           )}
 
           {error && (
