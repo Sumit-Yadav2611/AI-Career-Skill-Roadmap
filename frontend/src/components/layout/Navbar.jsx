@@ -8,7 +8,6 @@ import {
   ChevronDown,
   Sparkles,
   Menu,
-  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useRoadmap } from '../../hooks/useRoadmap';
