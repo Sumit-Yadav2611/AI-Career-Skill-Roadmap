@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Compass,
   Sparkles,
   FileText,
   BrainCircuit,
@@ -10,10 +9,7 @@ import {
   ArrowRight,
   CheckCircle2,
   TrendingUp,
-  Award,
   Layers,
-  BarChart3,
-  Users,
   Target
 } from 'lucide-react';
 import Button from '../components/common/Button';
