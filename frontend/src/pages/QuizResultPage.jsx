@@ -67,15 +67,20 @@ export const QuizResultPage = () => {
             </span>
             <span className="block text-xs text-slate-500 font-medium">Correct Answers</span>
           </div>
-          <div className="w-px h-10 bg-slate-200 hidden sm:block" />
-          <div>
-            <span className="text-3xl font-black text-brand-600">{result.confidence}%</span>
-            <span className="block text-xs text-slate-500 font-medium">{isMockMode ? "Demo suggestion score" : "Recommendation score"}</span>
-          </div>
+          {result.confidence !== null && result.confidence !== undefined && (
+            <>
+              <div className="w-px h-10 bg-slate-200 hidden sm:block" />
+              <div>
+                <span className="text-3xl font-black text-brand-600">{result.confidence}%</span>
+                <span className="block text-xs text-slate-500 font-medium">{isMockMode ? "Demo suggestion score" : "Recommendation score"}</span>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* AI Career Recommendation Callout */}
-        <div className="mt-8 p-4 rounded-2xl bg-white border border-brand-200 shadow-xs max-w-lg mx-auto flex items-center justify-between text-left">
+        {/* A career suggestion is shown only when the assessment service returns one. */}
+        {result.recommendedCareer && (
+          <div className="mt-8 p-4 rounded-2xl bg-white border border-brand-200 shadow-xs max-w-lg mx-auto flex items-center justify-between text-left">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
@@ -94,7 +99,8 @@ export const QuizResultPage = () => {
               Check Skill Gap <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
-        </div>
+          </div>
+        )}
       </Card>
 
       {/* Question by Question Review */}
