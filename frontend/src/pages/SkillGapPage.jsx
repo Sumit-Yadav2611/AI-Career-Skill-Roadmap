@@ -118,9 +118,13 @@ export const SkillGapPage = () => {
                     <div key={skill.id || skill.name} className="flex items-center justify-between p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/40 text-xs">
                       <div>
                         <span className="font-bold text-slate-900">{skill.name}</span>
-                        <span className="block text-[11px] text-slate-500 mt-0.5">Category: {skill.category || 'Other'}</span>
+                        <span className="block text-[11px] text-slate-500 mt-0.5">
+                      {skill.category || 'Other'} · {skill.verified ? 'Verified' : skill.source === 'resume' ? 'Resume extracted' : 'Self-reported'}
+                    </span>
                       </div>
-                      <Badge variant="emerald" size="sm">{skill.level || 'Level not assessed'}</Badge>
+                      <Badge variant="emerald" size="sm">
+                        {skill.userLevel || 'Not assessed'}
+                      </Badge>
                     </div>
                   ))}
                 </div>
