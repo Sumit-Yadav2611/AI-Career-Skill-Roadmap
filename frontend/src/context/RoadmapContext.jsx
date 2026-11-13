@@ -103,15 +103,23 @@ export const RoadmapProvider = ({ children }) => {
   const selectTargetCareer = async (careerId) => {
     const selectedCareer = careers.find((career) => career.id === careerId);
     if (!selectedCareer) {
-      throw new Error('Please select an available career option.');
+      setError('Please select an available career option.');
+      return false;
     }
 
-    // Persist first so a failed API request cannot leave the UI showing a
-    // target role that was never saved to the student's profile.
-    if (user) {
-      await updateUserProfile({ targetCareerId: careerId });
+    try {
+      // Persist first so a failed API request cannot leave the UI showing a
+      // target role that was never saved to the student's profile.
+      if (user) {
+        await updateUserProfile({ targetCareerId: careerId });
+      }
+      setActiveCareerId(careerId);
+      setError('');
+      return true;
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || 'Unable to save your target career.');
+      return false;
     }
-    setActiveCareerId(careerId);
   };
 
   const toggleMilestone = async (milestoneId, isCompleted) => {
@@ -138,7 +146,8 @@ export const RoadmapProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Failed to update milestone', err);
-      throw err;
+      setError(err?.response?.data?.message || err?.message || 'Unable to update this milestone.');
+      return false;
     }
   };
 
