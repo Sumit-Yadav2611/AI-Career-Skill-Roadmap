@@ -69,6 +69,7 @@ const getSkillChartData = (career, userSkills) => {
   );
   const proficiencyScore = { beginner: 33, intermediate: 66, advanced: 100 };
   const groups = new Map();
+  let hasAssessedMatch = false;
 
   requiredSkills.forEach((requiredSkill) => {
     const category = requiredSkill.category || 'Other';
@@ -80,9 +81,14 @@ const getSkillChartData = (career, userSkills) => {
     const listedSkill = skillByName.get(normalize(requiredSkill.name));
     if (listedSkill) {
       const currentLevel = proficiencyScore[normalize(listedSkill.proficiency)];
-      if (currentLevel) group.current.push(currentLevel);
+      if (currentLevel) {
+        group.current.push(currentLevel);
+        hasAssessedMatch = true;
+      }
     }
   });
+
+  if (!hasAssessedMatch) return [];
 
   return Array.from(groups.values()).map((group) => ({
     subject: group.subject,
