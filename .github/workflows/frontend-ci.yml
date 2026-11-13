@@ -39,5 +39,8 @@ jobs:
       - name: Run frontend unit tests
         run: npm test
 
+      - name: Run Oxlint
+        run: npm run lint
+
       - name: Build production bundle
         run: npm run build
