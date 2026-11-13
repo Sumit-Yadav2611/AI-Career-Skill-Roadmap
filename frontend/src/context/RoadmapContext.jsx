@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { careerService } from '../services/careerService';
-import { useAuth } from './AuthContext';
-
-const RoadmapContext = createContext(null);
+import { useAuth } from '../hooks/useAuth';
+import RoadmapContext from './roadmap-context';
 
 export const RoadmapProvider = ({ children }) => {
   const { user, updateUserProfile } = useAuth();
@@ -170,12 +169,5 @@ export const RoadmapProvider = ({ children }) => {
   );
 };
 
-export const useRoadmap = () => {
-  const context = useContext(RoadmapContext);
-  if (!context) {
-    throw new Error('useRoadmap must be used within a RoadmapProvider');
-  }
-  return context;
-};
 
 export default RoadmapProvider;
