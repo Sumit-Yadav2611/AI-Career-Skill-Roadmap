@@ -46,7 +46,7 @@ const getMilestoneStats = (roadmap) => {
 
 const getAssessmentStats = (history) => {
   const attempts = (Array.isArray(history) ? history : []).filter(
-    (attempt) => Number.isFinite(Number(attempt.score))
+    (attempt) => attempt.score !== null && attempt.score !== undefined && attempt.score !== '' && Number.isFinite(Number(attempt.score))
   );
   if (!attempts.length) return { average: null, count: 0 };
 
