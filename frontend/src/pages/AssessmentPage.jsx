@@ -13,6 +13,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { quizService } from '../services/quizService';
+import { useAuth } from '../context/AuthContext';
+import { isMockMode } from '../services/api';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -21,6 +23,7 @@ import QuizTimer from '../components/quiz/QuizTimer';
 
 export const AssessmentPage = () => {
   const navigate = useNavigate();
+  const { user, updateUserProfile } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -58,7 +61,23 @@ export const AssessmentPage = () => {
     setSubmitting(true);
     try {
       const result = await quizService.submitQuiz(selectedQuiz.id, userAnswers);
-      // Pass result in state to result page
+
+      // Demo attempts are saved only to the current development user's local profile.
+      // In API mode the assessment endpoint is responsible for persistence.
+      if (isMockMode) {
+        const previousAttempts = user?.assessmentHistory || [];
+        const attempt = {
+          id: `attempt_${Date.now()}`,
+          quizTitle: result.quizTitle,
+          score: result.scorePercentage,
+          totalQuestions: result.totalQuestions,
+          date: result.date || new Date().toISOString()
+        };
+        await updateUserProfile({
+          assessmentHistory: [...previousAttempts, attempt]
+        });
+      }
+
       navigate('/assessment/result', { state: { result } });
     } finally {
       setSubmitting(false);
