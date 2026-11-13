@@ -14,7 +14,8 @@ export const careerService = {
 
   async getCareerById(careerId) {
     if (isMockMode) {
-      const career = mockCareers.find((c) => c.id === careerId) || mockCareers[0];
+      const career = mockCareers.find((item) => item.id === careerId);
+      if (!career) throw new Error(`Career "${careerId}" was not found.`);
       return career;
     }
     const response = await api.get(`/careers/${careerId}`);
@@ -36,7 +37,8 @@ export const careerService = {
         return JSON.parse(stored);
       }
 
-      const template = mockRoadmapData[careerId] || mockRoadmapData['full-stack'];
+      const template = mockRoadmapData[careerId];
+      if (!template) throw new Error(`No roadmap is available for career "${careerId}".`);
       const roadmap = JSON.parse(JSON.stringify(template));
 
       // Only the explicitly selected sample account starts with sample progress.
@@ -58,13 +60,11 @@ export const careerService = {
   async updateMilestone(careerId, milestoneId, isCompleted, userId) {
     if (isMockMode) {
       const roadmap = await this.getRoadmap(careerId, userId);
-      let totalMilestones = 0;
       let completedMilestones = 0;
 
       const updatedPhases = roadmap.phases.map((phase) => ({
         ...phase,
         milestones: phase.milestones.map((m) => {
-          totalMilestones++;
           if (m.id === milestoneId) {
             const nextStatus = isCompleted ? 'completed' : 'pending';
             if (nextStatus === 'completed') completedMilestones++;
