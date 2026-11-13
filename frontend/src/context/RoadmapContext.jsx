@@ -7,19 +7,33 @@ const RoadmapContext = createContext(null);
 
 export const RoadmapProvider = ({ children }) => {
   const { user, updateUserProfile } = useAuth();
+  const userIdentity = user?.id || user?.email || null;
+
   const [careers, setCareers] = useState([]);
   const [activeCareerId, setActiveCareerId] = useState(user?.targetCareerId || null);
   const [activeCareer, setActiveCareer] = useState(null);
   const [roadmap, setRoadmap] = useState(null);
   const [skillGap, setSkillGap] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Load available careers. A new user must explicitly choose a target role.
+  // Load available careers and refresh the selected role when the signed-in
+  // student changes. This prevents stale career data leaking between sessions.
   useEffect(() => {
     let cancelled = false;
 
     const fetchCareers = async () => {
+      if (!userIdentity) {
+        setActiveCareerId(null);
+        setActiveCareer(null);
+        setRoadmap(null);
+        setSkillGap(null);
+        setLoading(false);
+        return;
+      }
+
       try {
+        setError('');
         const data = await careerService.getCareers();
         if (cancelled) return;
         setCareers(Array.isArray(data) ? data : []);
@@ -28,6 +42,7 @@ export const RoadmapProvider = ({ children }) => {
         if (!cancelled) {
           console.error('Failed to fetch careers', err);
           setCareers([]);
+          setError(err?.response?.data?.message || 'Unable to load career options.');
         }
       }
     };
@@ -36,14 +51,14 @@ export const RoadmapProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [user?.targetCareerId]);
+  }, [userIdentity, user?.targetCareerId]);
 
-  // Load details only after the student has selected a target role.
+  // Load role data only for the currently authenticated student.
   useEffect(() => {
     let cancelled = false;
 
     const loadCareerDetails = async () => {
-      if (!activeCareerId) {
+      if (!userIdentity || !activeCareerId) {
         setActiveCareer(null);
         setRoadmap(null);
         setSkillGap(null);
@@ -52,17 +67,18 @@ export const RoadmapProvider = ({ children }) => {
       }
 
       setLoading(true);
+      setError('');
       try {
         const career = await careerService.getCareerById(activeCareerId);
         if (cancelled) return;
-        setActiveCareer(career);
 
         const [rm, gap] = await Promise.all([
-          careerService.getRoadmap(activeCareerId, user?.id || user?.email),
+          careerService.getRoadmap(activeCareerId, userIdentity),
           careerService.getSkillGap(activeCareerId, user?.userSkills || [])
         ]);
 
         if (cancelled) return;
+        setActiveCareer(career);
         setRoadmap(rm);
         setSkillGap(gap);
       } catch (err) {
@@ -71,6 +87,7 @@ export const RoadmapProvider = ({ children }) => {
           setActiveCareer(null);
           setRoadmap(null);
           setSkillGap(null);
+          setError(err?.response?.data?.message || err?.message || 'Unable to load this career plan.');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -81,18 +98,34 @@ export const RoadmapProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeCareerId, user?.userSkills]);
+  }, [activeCareerId, userIdentity, user?.userSkills]);
 
   const selectTargetCareer = async (careerId) => {
-    setActiveCareerId(careerId);
+    const selectedCareer = careers.find((career) => career.id === careerId);
+    if (!selectedCareer) {
+      throw new Error('Please select an available career option.');
+    }
+
+    // Persist first so a failed API request cannot leave the UI showing a
+    // target role that was never saved to the student's profile.
     if (user) {
       await updateUserProfile({ targetCareerId: careerId });
     }
+    setActiveCareerId(careerId);
   };
 
   const toggleMilestone = async (milestoneId, isCompleted) => {
+    if (!activeCareerId || !userIdentity) {
+      throw new Error('Select a target career before updating roadmap progress.');
+    }
+
     try {
-      const updated = await careerService.updateMilestone(activeCareerId, milestoneId, isCompleted, user?.id || user?.email);
+      const updated = await careerService.updateMilestone(
+        activeCareerId,
+        milestoneId,
+        isCompleted,
+        userIdentity
+      );
       setRoadmap(updated);
 
       if (isCompleted) {
@@ -118,6 +151,7 @@ export const RoadmapProvider = ({ children }) => {
         roadmap,
         skillGap,
         loading,
+        error,
         selectTargetCareer,
         toggleMilestone
       }}
@@ -134,3 +168,5 @@ export const useRoadmap = () => {
   }
   return context;
 };
+
+export default RoadmapProvider;
