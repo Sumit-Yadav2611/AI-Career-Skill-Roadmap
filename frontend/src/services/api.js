@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
 
 // Mock data is a development-only convenience. A production build must always
 // use the configured API, even if VITE_USE_MOCK was accidentally set to true.
