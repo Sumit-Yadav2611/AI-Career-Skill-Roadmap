@@ -14,7 +14,8 @@ export const careerService = {
 
   async getCareerById(careerId) {
     if (isMockMode) {
-      const career = mockCareers.find((c) => c.id === careerId) || mockCareers[0];
+      const career = mockCareers.find((item) => item.id === careerId);
+      if (!career) throw new Error(`Career "${careerId}" was not found.`);
       return career;
     }
     const response = await api.get(`/careers/${careerId}`);
@@ -26,47 +27,58 @@ export const careerService = {
     return calculateSkillGap(userSkills, career.requiredSkills);
   },
 
-  async getRoadmap(careerId) {
+  async getRoadmap(careerId, userId) {
     if (isMockMode) {
-      // Check if user has saved modified roadmap in local storage
-      const stored = localStorage.getItem(`csrp_roadmap_${careerId}`);
+      // Local demo progress is scoped to one account and one target career.
+      const userScope = encodeURIComponent(userId || 'anonymous');
+      const storageKey = `csrp_roadmap_${userScope}_${careerId}`;
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         return JSON.parse(stored);
       }
-      return mockRoadmapData[careerId] || mockRoadmapData['full-stack'];
+
+      const template = mockRoadmapData[careerId];
+      if (!template) throw new Error(`No roadmap is available for career "${careerId}".`);
+      const roadmap = JSON.parse(JSON.stringify(template));
+
+      // Only the explicitly selected sample account starts with sample progress.
+      // Newly registered students always begin with an empty checklist.
+      if (userId !== 'usr_001') {
+        roadmap.phases.forEach((phase) => {
+          phase.milestones.forEach((milestone) => {
+            milestone.status = 'pending';
+          });
+        });
+      }
+
+      return roadmap;
     }
     const response = await api.get(`/roadmap/${careerId}`);
     return response.data;
   },
 
-  async updateMilestone(careerId, milestoneId, isCompleted) {
+  async updateMilestone(careerId, milestoneId, isCompleted, userId) {
     if (isMockMode) {
-      const roadmap = await this.getRoadmap(careerId);
-      let totalMilestones = 0;
-      let completedMilestones = 0;
+      const roadmap = await this.getRoadmap(careerId, userId);
 
       const updatedPhases = roadmap.phases.map((phase) => ({
         ...phase,
         milestones: phase.milestones.map((m) => {
-          totalMilestones++;
           if (m.id === milestoneId) {
             const nextStatus = isCompleted ? 'completed' : 'pending';
-            if (nextStatus === 'completed') completedMilestones++;
             return { ...m, status: nextStatus };
           }
-          if (m.status === 'completed') completedMilestones++;
           return m;
         })
       }));
 
-      const newReadiness = Math.round((completedMilestones / totalMilestones) * 100);
       const updatedRoadmap = {
         ...roadmap,
-        phases: updatedPhases,
-        readinessScore: Math.max(newReadiness, 40)
+        phases: updatedPhases
       };
 
-      localStorage.setItem(`csrp_roadmap_${careerId}`, JSON.stringify(updatedRoadmap));
+      const userScope = encodeURIComponent(userId || 'anonymous');
+      localStorage.setItem(`csrp_roadmap_${userScope}_${careerId}`, JSON.stringify(updatedRoadmap));
       return updatedRoadmap;
     }
 
@@ -79,6 +91,7 @@ export const careerService = {
       await new Promise((res) => setTimeout(res, 1400)); // realistic parsing delay
       return {
         ...sampleParsedResume,
+        isDemoData: true,
         fileName: file ? file.name : 'Uploaded_Resume.pdf',
         fileSize: file ? `${(file.size / 1024).toFixed(1)} KB` : '412 KB'
       };

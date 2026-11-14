@@ -1,23 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import AuthContext from './auth-context';
 import { authService } from '../services/authService';
 
-const AuthContext = createContext(null);
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Load initial user state
+  const [user, setUser] = useState(() => {
     try {
-      const currentUser = authService.getCurrentUser();
-      setUser(currentUser);
-    } catch (e) {
-      console.error('Failed to load user', e);
-    } finally {
-      setLoading(false);
+      return authService.getCurrentUser();
+    } catch (error) {
+      console.error('Failed to load user session', error);
+      return null;
     }
-  }, []);
+  });
+  const [loading, setLoading] = useState(false);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -55,47 +49,50 @@ export const AuthProvider = ({ children }) => {
   const addSkill = async (newSkill) => {
     if (!user) return;
     const exists = (user.userSkills || []).some(
-      (s) => s.name.toLowerCase() === newSkill.name.toLowerCase()
+      (skill) => skill.name.toLowerCase() === newSkill.name.toLowerCase()
     );
     if (exists) return user;
 
     const skillObj = {
       id: 'us_' + Date.now(),
       name: newSkill.name,
-      proficiency: newSkill.proficiency || 'Intermediate',
-      category: newSkill.category || 'General'
+      proficiency: newSkill.proficiency || 'Not assessed',
+      category: newSkill.category || 'Other',
+      source: 'self-reported',
+      verified: false
     };
 
-    const updatedSkills = [...(user.userSkills || []), skillObj];
-    return await updateUserProfile({ userSkills: updatedSkills });
+    return await updateUserProfile({
+      userSkills: [...(user.userSkills || []), skillObj]
+    });
   };
 
   const removeSkill = async (skillId) => {
     if (!user) return;
-    const updatedSkills = (user.userSkills || []).filter((s) => s.id !== skillId);
+    const updatedSkills = (user.userSkills || []).filter((skill) => skill.id !== skillId);
     return await updateUserProfile({ userSkills: updatedSkills });
   };
 
   const syncResumeSkills = async (extractedSkills) => {
     if (!user) return;
     const currentSkills = user.userSkills || [];
-    const currentSkillNames = new Set(currentSkills.map((s) => s.name.toLowerCase()));
+    const currentSkillNames = new Set(currentSkills.map((skill) => skill.name.toLowerCase()));
 
     const newSkillsToAdd = extractedSkills
       .filter((name) => !currentSkillNames.has(name.toLowerCase()))
-      .map((name, i) => ({
-        id: `us_synced_${Date.now()}_${i}`,
+      .map((name, index) => ({
+        id: `us_resume_${Date.now()}_${index}`,
         name,
-        proficiency: 'Intermediate',
-        category: 'Parsed from Resume'
+        proficiency: 'Not assessed',
+        category: 'Resume extracted',
+        source: 'resume',
+        verified: false
       }));
 
     if (newSkillsToAdd.length === 0) return user;
 
-    const merged = [...currentSkills, ...newSkillsToAdd];
     return await updateUserProfile({
-      userSkills: merged,
-      profileScore: Math.min((user.profileScore || 80) + 10, 100)
+      userSkills: [...currentSkills, ...newSkillsToAdd]
     });
   };
 
@@ -119,10 +116,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+
+export default AuthProvider;

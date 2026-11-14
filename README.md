@@ -1,126 +1,108 @@
-# AI-Based Career & Skill Roadmap Platform (CSRP)
+# AI Career & Skill Roadmap Platform
 
-> **Software Engineering Project (SPMP Lab 3)**  
-> Built with modern React.js, Tailwind CSS, Lucide Icons, Recharts, and Axios. Designed to connect with Spring Boot / Node.js backend and Python ML microservices.
+A React-based career planning platform for students and early-career developers. The frontend helps users maintain a profile, review their skills, take technical assessments, compare their profile with a target role, and work through a learning roadmap.
 
----
+> **Repository status:** The `main` branch currently contains the React frontend and project documentation. The Spring Boot and Python service code discussed during development is not present in this branch yet. Live API mode therefore requires the backend team to publish and run the matching services.
 
-## 🌟 Overview
+## Current frontend modules
 
-The **AI-Based Career & Skill Roadmap Platform** is an intelligent web application engineered to guide engineering graduates and students in identifying, evaluating, and achieving their ideal tech careers.
+- **Landing page:** Product overview, platform capabilities, and registration entry point.
+- **Authentication:** Login and registration screens with protected student routes.
+- **Student profile:** Academic details and an editable skill inventory.
+- **Resume workspace:** PDF upload UI and a parsed-data review flow.
+- **Assessments:** Timed multiple-choice assessments, scoring, and answer review.
+- **Career selection:** Choose a target career from the career service.
+- **Skill gap analysis:** Compare skill names in the student profile with a role's required skills.
+- **Learning roadmap:** View phases, milestones, learning resources, and completion status.
+- **Dashboard:** Profile completeness, assessment average, roadmap completion, skill coverage, and phase progress.
 
-The platform provides an end-to-end workflow:
-1. **Resume Ingestion & Parsing**: Extracts technical skills, education, and projects from uploaded PDFs using simulated NLP extraction (`pdfplumber` + `spaCy`).
-2. **Interactive Assessments**: Timed, multiple-choice domain quizzes (Web Development, DSA, AI/ML) that evaluate actual competency.
-3. **ML Career Prediction**: Supervised recommendation engine matching student profiles and test scores to industry roles.
-4. **Automated Skill Gap Analysis**: Side-by-side matrix comparing acquired skills vs required skills for the target career.
-5. **Dynamic Step-by-Step Roadmap**: Multi-phase learning milestones with interactive completion checkboxes, career readiness gauges, and curated learning resources.
+## Technology
 
----
+- React and Vite
+- Tailwind CSS
+- React Router
+- Axios
+- Recharts
+- Lucide React
+- Canvas Confetti
 
-## 🚀 Quick Start
+## Run the frontend locally
 
-### Prerequisites
-- Node.js (v18+ or v20+)
-- npm (v9+)
+Prerequisites: Node.js 18 or newer and npm.
 
-### Installation & Running Locally
+```powershell
+cd frontend
+npm install
+Copy-Item .env.example .env
+npm run dev
+```
 
-1. **Clone or navigate to the workspace root:**
-   ```bash
-   cd SE_Project
-   ```
+Open the local URL printed by Vite (normally `http://localhost:5173`).
 
-2. **Start the Frontend Development Server:**
-   ```bash
-   npm run dev
-   ```
-   *(Or navigate directly to `frontend/` and run `npm run dev`)*
+To verify the production bundle:
 
-3. **Open the Application in your browser:**
-   ```
-   http://localhost:5173
-   ```
+```powershell
+npm test
+npm run lint
+npm run build
+npm run preview
+```
 
-4. **1-Click Demo Login:**
-   On the `/login` page, click the **"1-Click Login"** button to immediately explore the pre-populated student profile (Aarav Sharma), skill radar charts, and active roadmaps.
+The unit tests use Node.js's built-in test runner and do not require an extra test framework.
 
----
+## Development demo mode
 
-## 🗺️ 9-Step Roadmap Implementation Summary
-
-| Step | Module | Deliverables Completed |
-|---|---|---|
-| **Step 1** | **Project Setup** | Vite + React, Tailwind CSS design tokens, Lucide Icons, Recharts, folder architecture, and Git initialization. |
-| **Step 2** | **Shared Layout** | Responsive AppShell, collapsible Sidebar with mobile drawer, sticky Navbar with career selector & notification center, reusable UI kit (`Button`, `Card`, `Badge`, `Modal`, `ProgressBar`, `FormInput`). |
-| **Step 3** | **Landing Page** | High-impact hero section, 4-core capability cards, 4-step interactive workflow, platform metrics, and student registration CTA. |
-| **Step 4** | **Login & Registration** | Split-screen layout, academic registration form (Degree, Semester, CGPA, Target role), client validation, JWT localStorage persistence, and 1-click demo login. |
-| **Step 5** | **Dashboard** | 4 KPI summary cards (Readiness Index %, Profile Score, Quiz Average, Skill Gap count), Recharts Radar chart (domain competency) and Bar chart (milestone streak), ML prediction card. |
-| **Step 6** | **Profile & Resume** | Academic details editor, interactive skills inventory with proficiency tags, drag-and-drop PDF resume upload with simulated NLP extraction and 1-click sync to profile. |
-| **Step 7** | **Assessment & Results** | Quiz Hub with 3 domains (Web Dev, DSA, AI/ML), real-time countdown timer, question palette navigation, score calculation, confetti celebration, and ML career recommendation trigger. |
-| **Step 8** | **Skill Gap & Roadmap** | Side-by-side gap matrix (Acquired vs Missing skills), 4-phase learning milestones (Foundations, Frontend, Backend, Cloud/DevOps), interactive checkboxes updating readiness in real time. |
-| **Step 9** | **API Integration & Testing** | Centralized Axios client with JWT interceptor, `.env` toggle for mock vs live backend mode, protected routes (`<ProtectedRoute>`), clean production build (`npm run build`). |
-
----
-
-## 🔌 Dual-Mode API Integration (Step 9)
-
-The platform features an intelligent dual-mode architecture configured in `frontend/.env`:
+The example environment file enables local mock mode:
 
 ```env
-# Change to false to connect to a live backend
+VITE_API_BASE_URL=http://localhost:10000/api
 VITE_USE_MOCK=true
-VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
-- **Mock Mode (`true`)**: Runs completely self-contained with realistic delays, localStorage persistence, and interactive quiz/milestone updates.
-- **Backend Mode (`false`)**: Automatically makes REST calls to your Spring Boot / Express server with `Authorization: Bearer <jwt_token>` attached to every request.
+Mock mode is enabled only when running the Vite development server. Production builds always use the API, even when `VITE_USE_MOCK=true` is accidentally configured.
 
----
+The login screen exposes a clearly labeled demo-account option in development. Local demo profiles are kept in this browser so you can sign out and sign in again; demo mode does not verify passwords and is not secure authentication. Do not enter real passwords or sensitive personal information. Demo career data, questions, assessment suggestions, and resume previews are illustrative sample data. A resume upload in mock mode does **not** parse or upload the selected PDF. Do not treat demo data as a real assessment, resume analysis, or AI-generated recommendation.
 
-## 📁 Folder Structure
+Newly registered demo users start with an empty skill list and roadmap checklist. Mock roadmap progress is scoped to the current local account and target career.
 
+## Live API configuration
+
+When the backend is available, set the frontend environment:
+
+```env
+VITE_API_BASE_URL=http://localhost:10000/api
+VITE_USE_MOCK=false
 ```
-SE_Project/
-├── package.json               # Root scripts (npm run dev, npm run build)
-├── .gitignore                 # Root git ignores
-├── SPMP.docx                  # Lab 3 SPMP Document
-├── 05_08_2026_SPMP_Documnet_Lab3.docx
-└── frontend/
-    ├── package.json
-    ├── vite.config.js
-    ├── tailwind.config.js
-    ├── postcss.config.js
-    ├── .env
-    └── src/
-        ├── components/
-        │   ├── common/        # Button, Card, Badge, Modal, FormInput, ProgressBar
-        │   ├── layout/        # Navbar, Sidebar, AppShell, Footer, ProtectedRoute
-        │   ├── dashboard/     # SkillRadarChart, MilestoneBarChart, CareerMatchCard
-        │   ├── resume/        # ResumeUploader, ParsedPreviewModal
-        │   └── quiz/          # QuizTimer
-        ├── context/
-        │   ├── AuthContext.jsx
-        │   └── RoadmapContext.jsx
-        ├── pages/
-        │   ├── LandingPage.jsx
-        │   ├── LoginPage.jsx
-        │   ├── RegisterPage.jsx
-        │   ├── DashboardPage.jsx
-        │   ├── ProfilePage.jsx
-        │   ├── AssessmentPage.jsx
-        │   ├── QuizResultPage.jsx
-        │   ├── SkillGapPage.jsx
-        │   ├── RoadmapPage.jsx
-        │   └── NotFoundPage.jsx
-        ├── services/
-        │   ├── api.js         # Axios instance + interceptors
-        │   ├── authService.js
-        │   ├── careerService.js
-        │   ├── quizService.js
-        │   └── mockData.js
-        ├── utils/
-        │   └── helpers.js
-        ├── App.jsx
-        └── main.jsx
-```
+
+Restart Vite after editing the environment file.
+
+The current frontend service layer expects these routes:
+
+| Method | Route | Frontend purpose |
+|---|---|---|
+| POST | `/auth/register` | Create a student account |
+| POST | `/auth/login` | Sign in |
+| PUT | `/profile` | Update the signed-in student's profile |
+| GET | `/careers` | List career options |
+| GET | `/careers/{careerId}` | Load a career and required skills |
+| GET | `/roadmap/{careerId}` | Load a student's roadmap for a career |
+| PATCH | `/roadmap/{careerId}/milestones/{milestoneId}` | Update milestone completion |
+| POST | `/resume/parse` | Upload and analyze a PDF resume |
+| GET | `/quizzes` | List assessments |
+| GET | `/quizzes/{quizId}` | Load an assessment |
+| POST | `/quizzes/{quizId}/submit` | Submit answers and return a result |
+
+These are the frontend's current expectations, not a claim that the backend routes are already deployed. The backend team should confirm request/response shapes, authentication behavior, CORS settings, and error formats before switching users to live mode.
+
+## Important implementation notes
+
+- Skill names extracted from a resume are marked **Not assessed** until the student provides a proficiency level.
+- Dashboard roadmap completion is calculated from completed milestones. It is not presented as a career-readiness or job-placement probability.
+- Skill coverage currently compares normalized skill names. It does not independently verify proficiency or prove that a student can demonstrate a skill.
+- Assessment results are passed to the result page during navigation. Persistent result-history retrieval after a page refresh still requires a backend attempt-history API.
+- The current Axios client attaches a bearer token from local storage. Before a public launch, review the authentication design with the backend team; secure, HttpOnly cookie-based sessions may be preferable depending on the API and CSRF strategy.
+- Do not commit real `.env` files, API keys, passwords, student resumes, or private user data.
+
+## Collaboration
+
+Work on a feature branch, keep changes scoped to the frontend you own, and open a pull request for review before merging into `main`. Coordinate API contract changes with the backend team rather than guessing endpoint behavior.

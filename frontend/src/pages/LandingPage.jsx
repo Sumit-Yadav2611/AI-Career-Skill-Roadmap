@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Compass,
   Sparkles,
   FileText,
   BrainCircuit,
@@ -10,10 +9,7 @@ import {
   ArrowRight,
   CheckCircle2,
   TrendingUp,
-  Award,
   Layers,
-  BarChart3,
-  Users,
   Target
 } from 'lucide-react';
 import Button from '../components/common/Button';
@@ -25,8 +21,8 @@ export const LandingPage = () => {
     {
       icon: FileText,
       color: 'indigo',
-      title: 'NLP Resume Skill Parsing',
-      description: 'Upload your PDF resume. Our NLP pipeline automatically extracts programming languages, libraries, education, and projects.'
+      title: 'Resume & Skill Insights',
+      description: 'Organize your resume information, review extracted details, and build a clear inventory of your technical skills.'
     },
     {
       icon: BrainCircuit,
@@ -37,45 +33,45 @@ export const LandingPage = () => {
     {
       icon: GitFork,
       color: 'emerald',
-      title: 'Automated Skill Gap Analysis',
-      description: 'Instantly view the delta between your existing skill set and what top tech companies require for your dream role.'
+      title: 'Role-Based Skill Gap Analysis',
+      description: 'Compare the skills in your profile with the requirements of a selected career path and identify areas to develop.'
     },
     {
       icon: MapPin,
       color: 'amber',
-      title: 'Dynamic Personalized Roadmap',
-      description: 'Follow actionable weekly milestones curated with top industry documentation, video masterclasses, and capstone projects.'
+      title: 'Structured Learning Roadmap',
+      description: 'Work through learning phases, practical milestones, and useful resources aligned with your selected career path.'
     }
   ];
 
   const workflowSteps = [
     {
       step: '01',
-      title: 'Create Student Profile & Upload Resume',
-      desc: 'Enter your degree, CGPA, and drop your PDF resume for instant automated NLP parsing.'
+      title: 'Create Your Student Profile',
+      desc: 'Add your education, interests, current skills, and resume information to build your starting profile.'
     },
     {
       step: '02',
       title: 'Take Domain Assessment Quizzes',
-      desc: 'Attempt adaptive multiple-choice questions to validate your real-world proficiency.'
+      desc: 'Attempt multiple-choice assessments to review your current understanding of selected domains.'
     },
     {
       step: '03',
-      title: 'ML Career Prediction & Gap Matrix',
-      desc: 'Our supervised ML model predicts your highest-match career and highlights missing skills.'
+      title: 'Explore Career Paths & Skill Requirements',
+      desc: 'Explore career options, compare their required skills, and choose a target role that fits your goals.'
     },
     {
       step: '04',
-      title: 'Execute Customized Milestones',
-      desc: 'Check off milestones step-by-step, watch your readiness score climb, and land your goal role.'
+      title: 'Follow Your Learning Roadmap',
+      desc: 'Complete learning milestones, track your progress, and build evidence of the skills you develop.'
     }
   ];
 
   const stats = [
-    { label: 'Prediction Accuracy', value: '94.2%', icon: Target },
-    { label: 'Tech Careers Mapped', value: '50+', icon: Layers },
-    { label: 'Milestones Completed', value: '18,500+', icon: CheckCircle2 },
-    { label: 'Student Readiness Gain', value: '+42%', icon: TrendingUp },
+    { label: 'Career exploration', value: 'Compare target roles', icon: Target },
+    { label: 'Skill development', value: 'Identify learning gaps', icon: Layers },
+    { label: 'Learning roadmap', value: 'Work through milestones', icon: CheckCircle2 },
+    { label: 'Progress tracking', value: 'Review your activity', icon: TrendingUp },
   ];
 
   return (
@@ -88,10 +84,10 @@ export const LandingPage = () => {
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-brand-200/80 shadow-xs mb-8 animate-in fade-in slide-in-from-bottom-2">
           <Sparkles className="w-4 h-4 text-brand-600" />
           <span className="text-xs font-bold text-brand-800">
-            AI-Powered Career & Skill Roadmap Platform
+            Career & Skill Roadmap Platform
           </span>
           <Badge variant="indigo" size="sm">
-            SPMP Lab 3
+            Career Planning
           </Badge>
         </div>
 
@@ -103,7 +99,7 @@ export const LandingPage = () => {
         </h1>
 
         <p className="mt-6 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed">
-          Extract skills from your resume with NLP, validate knowledge with timed technical quizzes, receive ML-driven career recommendations, and follow a personalized step-by-step learning roadmap.
+          Build your student profile, review your skills, explore career paths, identify learning gaps, and follow a structured roadmap toward your professional goals.
         </p>
 
         {/* Action Buttons */}
@@ -123,13 +119,13 @@ export const LandingPage = () => {
         {/* Feature Pills */}
         <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-500">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free Tier Cloud Ready
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Student-Focused Career Planning
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> JWT Stateless Security
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Role-Based Skill Comparison
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> ML Career Prediction Engine
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Trackable Learning Milestones
           </span>
         </div>
       </section>
@@ -144,7 +140,7 @@ export const LandingPage = () => {
                 <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-2">
                   <Icon className="w-5 h-5" />
                 </div>
-                <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                <div className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
                   {s.value}
                 </div>
                 <div className="text-xs font-medium text-slate-500 mt-0.5">
@@ -166,7 +162,7 @@ export const LandingPage = () => {
             Everything Students Need to Accelerate Placement
           </h2>
           <p className="mt-3 text-sm text-slate-600">
-            Engineered with a 4-component architecture: React frontend, Spring Boot / Node backend, Python ML microservice, and MySQL database.
+            A connected workflow for understanding your current skills, exploring career requirements, and planning your next learning steps.
           </p>
         </div>
 
@@ -203,7 +199,7 @@ export const LandingPage = () => {
               From Resume Upload to Targeted Placement
             </h2>
             <p className="mt-3 text-sm text-slate-300">
-              A transparent, automated four-step lifecycle designed to guide engineering graduates.
+              A practical journey that turns career exploration into clear learning actions.
             </p>
           </div>
 

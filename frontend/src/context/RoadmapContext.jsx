@@ -1,71 +1,138 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { careerService } from '../services/careerService';
-import { useAuth } from './AuthContext';
-
-const RoadmapContext = createContext(null);
+import { useAuth } from '../hooks/useAuth';
+import RoadmapContext from './roadmap-context';
 
 export const RoadmapProvider = ({ children }) => {
   const { user, updateUserProfile } = useAuth();
+  const userIdentity = user?.id || user?.email || null;
+
   const [careers, setCareers] = useState([]);
-  const [activeCareerId, setActiveCareerId] = useState('full-stack');
+  const [activeCareerId, setActiveCareerId] = useState(user?.targetCareerId || null);
   const [activeCareer, setActiveCareer] = useState(null);
   const [roadmap, setRoadmap] = useState(null);
   const [skillGap, setSkillGap] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Load careers
+  // Load available careers and refresh the selected role when the signed-in
+  // student changes. This prevents stale career data leaking between sessions.
   useEffect(() => {
+    let cancelled = false;
+
     const fetchCareers = async () => {
+      if (!userIdentity) {
+        setActiveCareerId(null);
+        setActiveCareer(null);
+        setRoadmap(null);
+        setSkillGap(null);
+        setLoading(false);
+        return;
+      }
+
       try {
+        setError('');
         const data = await careerService.getCareers();
-        setCareers(data);
-        if (user?.targetCareerId) {
-          setActiveCareerId(user.targetCareerId);
-        }
+        if (cancelled) return;
+        setCareers(Array.isArray(data) ? data : []);
+        setActiveCareerId(user?.targetCareerId || null);
       } catch (err) {
-        console.error('Failed to fetch careers', err);
+        if (!cancelled) {
+          console.error('Failed to fetch careers', err);
+          setCareers([]);
+          setError(err?.response?.data?.message || 'Unable to load career options.');
+        }
       }
     };
-    fetchCareers();
-  }, [user?.targetCareerId]);
 
-  // Update active career and load roadmap & skill gap
+    fetchCareers();
+    return () => {
+      cancelled = true;
+    };
+  }, [userIdentity, user?.targetCareerId]);
+
+  // Load role data only for the currently authenticated student.
   useEffect(() => {
+    let cancelled = false;
+
     const loadCareerDetails = async () => {
-      if (!activeCareerId) return;
+      if (!userIdentity || !activeCareerId) {
+        setActiveCareer(null);
+        setRoadmap(null);
+        setSkillGap(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError('');
       try {
         const career = await careerService.getCareerById(activeCareerId);
+        if (cancelled) return;
+
+        const [rm, gap] = await Promise.all([
+          careerService.getRoadmap(activeCareerId, userIdentity),
+          careerService.getSkillGap(activeCareerId, user?.userSkills || [])
+        ]);
+
+        if (cancelled) return;
         setActiveCareer(career);
-
-        const rm = await careerService.getRoadmap(activeCareerId);
         setRoadmap(rm);
-
-        if (user?.userSkills) {
-          const gap = await careerService.getSkillGap(activeCareerId, user.userSkills);
-          setSkillGap(gap);
-        }
+        setSkillGap(gap);
       } catch (err) {
-        console.error('Error loading roadmap/skill gap', err);
+        if (!cancelled) {
+          console.error('Error loading roadmap/skill gap', err);
+          setActiveCareer(null);
+          setRoadmap(null);
+          setSkillGap(null);
+          setError(err?.response?.data?.message || err?.message || 'Unable to load this career plan.');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadCareerDetails();
-  }, [activeCareerId, user?.userSkills]);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCareerId, userIdentity, user?.userSkills]);
 
   const selectTargetCareer = async (careerId) => {
-    setActiveCareerId(careerId);
-    if (user) {
-      await updateUserProfile({ targetCareerId: careerId });
+    const selectedCareer = careers.find((career) => career.id === careerId);
+    if (!selectedCareer) {
+      setError('Please select an available career option.');
+      return false;
+    }
+
+    try {
+      // Persist first so a failed API request cannot leave the UI showing a
+      // target role that was never saved to the student's profile.
+      if (user) {
+        await updateUserProfile({ targetCareerId: careerId });
+      }
+      setActiveCareerId(careerId);
+      setError('');
+      return true;
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || 'Unable to save your target career.');
+      return false;
     }
   };
 
   const toggleMilestone = async (milestoneId, isCompleted) => {
+    if (!activeCareerId || !userIdentity) {
+      throw new Error('Select a target career before updating roadmap progress.');
+    }
+
     try {
-      const updated = await careerService.updateMilestone(activeCareerId, milestoneId, isCompleted);
+      const updated = await careerService.updateMilestone(
+        activeCareerId,
+        milestoneId,
+        isCompleted,
+        userIdentity
+      );
       setRoadmap(updated);
 
       if (isCompleted) {
@@ -76,13 +143,10 @@ export const RoadmapProvider = ({ children }) => {
           colors: ['#6366f1', '#10b981', '#f59e0b']
         });
       }
-
-      // Update user career readiness in profile
-      if (updated.readinessScore && user) {
-        await updateUserProfile({ careerReadiness: updated.readinessScore });
-      }
     } catch (err) {
       console.error('Failed to update milestone', err);
+      setError(err?.response?.data?.message || err?.message || 'Unable to update this milestone.');
+      return false;
     }
   };
 
@@ -95,6 +159,7 @@ export const RoadmapProvider = ({ children }) => {
         roadmap,
         skillGap,
         loading,
+        error,
         selectTargetCareer,
         toggleMilestone
       }}
@@ -104,10 +169,5 @@ export const RoadmapProvider = ({ children }) => {
   );
 };
 
-export const useRoadmap = () => {
-  const context = useContext(RoadmapContext);
-  if (!context) {
-    throw new Error('useRoadmap must be used within a RoadmapProvider');
-  }
-  return context;
-};
+
+export default RoadmapProvider;

@@ -3,16 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Compass,
   Bell,
-  Search,
   User,
   LogOut,
   ChevronDown,
   Sparkles,
   Menu,
-  CheckCircle2
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useRoadmap } from '../../context/RoadmapContext';
+import { useAuth } from '../../hooks/useAuth';
+import { useRoadmap } from '../../hooks/useRoadmap';
 import Badge from '../common/Badge';
 
 export const Navbar = ({ onToggleSidebar }) => {

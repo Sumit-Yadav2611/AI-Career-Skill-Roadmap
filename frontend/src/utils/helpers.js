@@ -1,5 +1,5 @@
 /**
- * Utility functions for AI Career & Skill Roadmap Platform
+ * Utility functions for the AI Career & Skill Roadmap Platform.
  */
 
 export function classNames(...classes) {
@@ -19,36 +19,57 @@ export function getReadinessBadge(score) {
 }
 
 export function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
+  const safeSeconds = Math.max(0, Number.isFinite(Number(seconds)) ? Number(seconds) : 0);
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = Math.floor(safeSeconds % 60);
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+const normalizeSkillName = (skill) => {
+  const name = typeof skill === 'string' ? skill : skill?.name;
+  return typeof name === 'string' ? name.trim().toLowerCase() : '';
+};
+
 export function calculateSkillGap(userSkills, careerRequiredSkills) {
-  const normalizedUser = (userSkills || []).map(s => 
-    (typeof s === 'string' ? s : s.name).toLowerCase().trim()
-  );
+  const skillByName = new Map();
+
+  (Array.isArray(userSkills) ? userSkills : []).forEach((skill) => {
+    const normalizedName = normalizeSkillName(skill);
+    if (normalizedName) skillByName.set(normalizedName, skill);
+  });
+
+  const requiredSkills = (Array.isArray(careerRequiredSkills) ? careerRequiredSkills : [])
+    .filter((requiredSkill) => normalizeSkillName(requiredSkill));
 
   const acquired = [];
   const missing = [];
 
-  careerRequiredSkills.forEach(reqSkill => {
-    const isPresent = normalizedUser.includes(reqSkill.name.toLowerCase().trim());
-    if (isPresent) {
-      acquired.push(reqSkill);
+  requiredSkills.forEach((requiredSkill) => {
+    const normalizedName = normalizeSkillName(requiredSkill);
+    const userSkill = skillByName.get(normalizedName);
+
+    if (userSkill) {
+      acquired.push({
+        ...requiredSkill,
+        // Keep the target's required level separate from the student's own
+        // self-reported/assessed proficiency.
+        userLevel: typeof userSkill === 'string' ? null : userSkill.proficiency || null,
+        source: typeof userSkill === 'string' ? 'self-reported' : userSkill.source || 'self-reported',
+        verified: typeof userSkill === 'string' ? false : userSkill.verified === true
+      });
     } else {
-      missing.push(reqSkill);
+      missing.push(requiredSkill);
     }
   });
 
-  const percentage = careerRequiredSkills.length > 0 
-    ? Math.round((acquired.length / careerRequiredSkills.length) * 100) 
-    : 0;
+  const percentage = requiredSkills.length > 0
+    ? Math.round((acquired.length / requiredSkills.length) * 100)
+    : null;
 
   return {
     acquired,
     missing,
     percentage,
-    totalRequired: careerRequiredSkills.length
+    totalRequired: requiredSkills.length
   };
 }
