@@ -239,7 +239,11 @@ export const LandingPage = () => {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link to="/register">
-                <Button size="lg" className="bg-white text-brand-700 hover:bg-slate-100 font-bold shadow-lg">
+                <Button
+                  size="lg"
+                  className="font-bold shadow-lg"
+                  style={{ backgroundColor: '#111827', color: '#ffffff' }}
+                >
                   Create Free Account
                 </Button>
               </Link>
