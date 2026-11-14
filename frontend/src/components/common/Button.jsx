@@ -26,6 +26,7 @@ export const Button = ({
     accent: 'bg-accent-emerald text-white hover:bg-emerald-600 focus:ring-emerald-500 shadow-sm',
     outline: 'border border-brand-500 text-brand-600 hover:bg-brand-50 focus:ring-brand-400',
     ghost: 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:ring-slate-300',
+    glass: 'bg-white/10 text-white border border-white/30 backdrop-blur-md shadow-lg shadow-slate-950/10 hover:bg-white/20 hover:border-white/50 active:bg-white/15 focus:ring-white/50',
     danger: 'bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500 shadow-sm',
   };
 

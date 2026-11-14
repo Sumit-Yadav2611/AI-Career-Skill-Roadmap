@@ -167,7 +167,7 @@ export const DashboardPage = () => {
 
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/assessment">
-            <Button size="md" className="bg-white text-slate-900 hover:bg-slate-100 font-bold gap-2">
+            <Button size="md" variant="glass" className="font-bold gap-2">
               <BrainCircuit className="w-4 h-4 text-brand-600" /> Take Assessment
             </Button>
           </Link>

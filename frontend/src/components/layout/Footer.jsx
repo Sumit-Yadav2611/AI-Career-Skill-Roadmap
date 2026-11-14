@@ -12,8 +12,7 @@ export const Footer = () => {
           <span className="font-semibold text-slate-700">
             CareerPath AI Platform
           </span>
-          <span>•</span>
-          <span>SPMP Lab 3 Software Engineering Project</span>
+
         </div>
 
         <div className="flex items-center gap-4">
