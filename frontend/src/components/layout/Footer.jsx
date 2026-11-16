@@ -1,33 +1,25 @@
 import React from 'react';
-import { Compass, ShieldCheck, Sparkles } from 'lucide-react';
+import { Compass } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="mt-auto border-t border-slate-200/80 bg-white py-6 px-4 sm:px-6">
+    <footer className="bg-[#0B0C12] border-t border-[#1E202B] py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-md bg-brand-600 flex items-center justify-center text-white">
-            <Compass className="w-3 h-3" />
+          <div className="w-6 h-6 rounded-lg bg-red-950/80 border border-red-800/60 flex items-center justify-center text-red-500">
+            <Compass className="w-3.5 h-3.5" />
           </div>
-          <span className="font-semibold text-slate-700">
-            CareerPath AI Platform
-          </span>
-
-        </div>
-
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            JWT Stateless Auth
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-brand-600" />
-            NLP Resume Skill Parsing
+          <span className="font-bold text-slate-300">
+            CareerPath <span className="text-red-500">AI</span>
           </span>
         </div>
+
+        <p className="text-slate-500">
+          Powered by Google Gemini Microservice & Spring Boot Backend
+        </p>
       </div>
     </footer>
   );
 };
+
 export default Footer;

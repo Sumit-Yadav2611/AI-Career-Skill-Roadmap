@@ -8,30 +8,31 @@ export const Badge = ({
   icon: Icon
 }) => {
   const variantStyles = {
-    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200/60',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
-    amber: 'bg-amber-50 text-amber-700 border-amber-200/60',
-    rose: 'bg-rose-50 text-rose-700 border-rose-200/60',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200/60',
-    cyan: 'bg-cyan-50 text-cyan-700 border-cyan-200/60',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+    indigo: 'bg-[#181A28] text-indigo-400 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.15)]',
+    emerald: 'bg-[#0E2018] text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]',
+    amber: 'bg-[#221808] text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.15)]',
+    rose: 'bg-red-950/60 text-red-400 border border-red-800/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
+    purple: 'bg-[#1E112A] text-purple-400 border border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.15)]',
+    cyan: 'bg-[#0B1E24] text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.15)]',
+    slate: 'bg-[#181922] text-slate-300 border border-[#2B2C3C]',
   };
 
   const sizeStyles = {
-    sm: 'text-[11px] px-2 py-0.5 gap-1',
-    md: 'text-xs px-2.5 py-1 gap-1.5',
-    lg: 'text-sm px-3 py-1.5 gap-2',
+    sm: 'text-[10px] sm:text-[11px] px-2.5 py-0.5 gap-1 font-semibold rounded-full',
+    md: 'text-xs px-3 py-1 gap-1.5 font-semibold rounded-full',
+    lg: 'text-sm px-3.5 py-1.5 gap-2 font-bold rounded-full',
   };
 
   return (
     <span
-      className={`inline-flex items-center font-medium border rounded-full ${
+      className={`inline-flex items-center tracking-wide ${
         sizeStyles[size] || sizeStyles.md
       } ${variantStyles[variant] || variantStyles.indigo} ${className}`}
     >
-      {Icon && <Icon className="w-3.5 h-3.5" />}
+      {Icon && <Icon className="w-3 h-3" />}
       {children}
     </span>
   );
 };
+
 export default Badge;

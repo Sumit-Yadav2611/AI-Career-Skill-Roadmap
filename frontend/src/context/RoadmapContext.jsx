@@ -16,8 +16,7 @@ export const RoadmapProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Load available careers and refresh the selected role when the signed-in
-  // student changes. This prevents stale career data leaking between sessions.
+  // Load available careers
   useEffect(() => {
     let cancelled = false;
 
@@ -35,13 +34,17 @@ export const RoadmapProvider = ({ children }) => {
         setError('');
         const data = await careerService.getCareers();
         if (cancelled) return;
-        setCareers(Array.isArray(data) ? data : []);
-        setActiveCareerId(user?.targetCareerId || null);
+        const list = Array.isArray(data) ? data : [];
+        setCareers(list);
+        if (user?.targetCareerId) {
+          setActiveCareerId(user.targetCareerId);
+        } else if (list.length > 0) {
+          setActiveCareerId(list[0].id);
+        }
       } catch (err) {
         if (!cancelled) {
           console.error('Failed to fetch careers', err);
-          setCareers([]);
-          setError(err?.response?.data?.message || 'Unable to load career options.');
+          setError(err?.message || 'Unable to load career options.');
         }
       }
     };
@@ -52,7 +55,7 @@ export const RoadmapProvider = ({ children }) => {
     };
   }, [userIdentity, user?.targetCareerId]);
 
-  // Load role data only for the currently authenticated student.
+  // Load role data and AI-based roadmap & skill gap
   useEffect(() => {
     let cancelled = false;
 
@@ -72,8 +75,8 @@ export const RoadmapProvider = ({ children }) => {
         if (cancelled) return;
 
         const [rm, gap] = await Promise.all([
-          careerService.getRoadmap(activeCareerId, userIdentity),
-          careerService.getSkillGap(activeCareerId, user?.userSkills || [])
+          careerService.getRoadmap(activeCareerId, userIdentity, user?.userSkills || []),
+          careerService.getSkillGap(activeCareerId, user?.userSkills || []),
         ]);
 
         if (cancelled) return;
@@ -82,11 +85,8 @@ export const RoadmapProvider = ({ children }) => {
         setSkillGap(gap);
       } catch (err) {
         if (!cancelled) {
-          console.error('Error loading roadmap/skill gap', err);
-          setActiveCareer(null);
-          setRoadmap(null);
-          setSkillGap(null);
-          setError(err?.response?.data?.message || err?.message || 'Unable to load this career plan.');
+          console.error('Error loading roadmap / skill gap:', err);
+          setError(err?.message || 'Model is in high demand, try later');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -100,15 +100,13 @@ export const RoadmapProvider = ({ children }) => {
   }, [activeCareerId, userIdentity, user?.userSkills]);
 
   const selectTargetCareer = async (careerId) => {
-    const selectedCareer = careers.find((career) => career.id === careerId);
+    const selectedCareer = careers.find((career) => String(career.id) === String(careerId));
     if (!selectedCareer) {
       setError('Please select an available career option.');
       return false;
     }
 
     try {
-      // Persist first so a failed API request cannot leave the UI showing a
-      // target role that was never saved to the student's profile.
       if (user) {
         await updateUserProfile({ targetCareerId: careerId });
       }
@@ -116,7 +114,7 @@ export const RoadmapProvider = ({ children }) => {
       setError('');
       return true;
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || 'Unable to save your target career.');
+      setError(err?.message || 'Unable to save your target career.');
       return false;
     }
   };
@@ -140,12 +138,12 @@ export const RoadmapProvider = ({ children }) => {
           particleCount: 50,
           spread: 60,
           origin: { y: 0.8 },
-          colors: ['#6366f1', '#10b981', '#f59e0b']
+          colors: ['#ef4444', '#dc2626', '#b91c1c'],
         });
       }
     } catch (err) {
       console.error('Failed to update milestone', err);
-      setError(err?.response?.data?.message || err?.message || 'Unable to update this milestone.');
+      setError(err?.message || 'Unable to update this milestone.');
       return false;
     }
   };
@@ -161,13 +159,12 @@ export const RoadmapProvider = ({ children }) => {
         loading,
         error,
         selectTargetCareer,
-        toggleMilestone
+        toggleMilestone,
       }}
     >
       {children}
     </RoadmapContext.Provider>
   );
 };
-
 
 export default RoadmapProvider;

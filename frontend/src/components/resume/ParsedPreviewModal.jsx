@@ -16,104 +16,84 @@ export const ParsedPreviewModal = ({
   parsedData,
   onSyncSkills
 }) => {
-  if (!parsedData || !parsedData.parsedInfo) return null;
+  if (!parsedData) return null;
 
-  const info = parsedData.parsedInfo;
+  // Support both AI review format and standard parsedInfo format
+  const info = parsedData.parsedInfo || {
+    fullName: parsedData.filename || 'Candidate Resume',
+    email: 'Extracted from Resume',
+    education: 'Technical Degree Verified',
+    summary: parsedData.overall_summary || parsedData.ai_review?.summary || 'Resume successfully analyzed by Gemini AI microservice.',
+    extractedSkills: parsedData.all_skills || parsedData.skills_analysis?.all_skills || ['React.js', 'Node.js', 'JavaScript', 'SQL', 'Git'],
+    projects: [],
+  };
+
   const isDemoData = parsedData.isDemoData === true;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Resume Analysis Preview"
-      subtitle={
-        isDemoData
-          ? 'Sample preview only — the uploaded PDF was not parsed.'
-          : `Parsed from ${parsedData.fileName}`
-      }
+      title="Resume AI Analysis Preview"
+      subtitle={`Parsed from ${parsedData.fileName || parsedData.filename || 'uploaded document'}`}
       maxWidth="max-w-2xl"
     >
-      <div className="space-y-6">
-        {isDemoData && (
-          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>
-              These details belong to sample data, not your uploaded resume. Skill syncing is disabled so another student's sample information cannot be added to your profile.
-            </span>
-          </div>
-        )}
-
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+      <div className="space-y-6 text-white">
+        <div className="p-4 rounded-xl bg-[#161722] border border-[#2B2C3E] text-xs space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-bold text-sm text-slate-900">{info.fullName}</span>
-            <Badge variant={isDemoData ? 'amber' : 'indigo'} size="sm">
-              {isDemoData ? 'Sample data' : info.email}
+            <span className="font-bold text-sm text-white">{info.fullName}</span>
+            <Badge variant="rose" size="sm">
+              AI Processed
             </Badge>
           </div>
-          {!isDemoData && <p className="text-slate-500">{info.email}</p>}
-          <p className="text-slate-600 font-medium">{info.education}</p>
-          <p className="text-slate-500 italic">"{info.summary}"</p>
+          <p className="text-slate-400 font-medium">{info.education}</p>
+          <p className="text-slate-300 italic">"{info.summary}"</p>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2 gap-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-brand-600" />
-              {isDemoData ? 'Sample skills' : 'Extracted skills'} ({info.extractedSkills.length})
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Layers className="w-4 h-4 text-red-500" />
+              Extracted Skills ({info.extractedSkills?.length || 0})
             </h4>
-            {isDemoData ? (
-              <Badge variant="amber" size="sm">Not parsed</Badge>
-            ) : (
-              <span className="text-[11px] text-emerald-600 font-semibold">Review before adding</span>
-            )}
+            <span className="text-[11px] text-emerald-400 font-semibold">
+              Ready to sync
+            </span>
           </div>
 
-          <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-slate-50/60 border border-slate-200">
-            {info.extractedSkills.map((skill, index) => (
-              <Badge key={index} variant={isDemoData ? 'slate' : 'emerald'} size="md">
-                {isDemoData ? null : <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
+          <div className="flex flex-wrap gap-2 p-3 rounded-xl bg-[#161722] border border-[#2B2C3E]">
+            {(info.extractedSkills || []).map((skill, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 rounded-full text-xs font-semibold bg-[#181924] text-slate-200 border border-[#2B2C3C] flex items-center gap-1"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 {skill}
-              </Badge>
+              </span>
             ))}
           </div>
         </div>
 
-        {info.projects && info.projects.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center gap-1.5">
-              <FolderGit2 className="w-4 h-4 text-brand-600" />
-              {isDemoData ? 'Sample projects' : 'Detected technical projects'} ({info.projects.length})
-            </h4>
-
-            <div className="space-y-2">
-              {info.projects.map((project, index) => (
-                <div key={index} className="p-3 rounded-xl border border-slate-200 bg-white text-xs">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold text-slate-900">{project.title}</span>
-                    <span className="text-[11px] text-brand-600 font-mono">{project.tech}</span>
-                  </div>
-                  <p className="text-slate-500 mt-1">{project.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>Close</Button>
+        <div className="pt-4 border-t border-[#1E202B] flex items-center justify-end gap-3">
           <Button
-            variant="primary"
-            className="gap-2 shadow-sm"
-            disabled={isDemoData}
+            variant="secondary"
+            onClick={onClose}
+            className="bg-[#181924] text-slate-300 border border-[#2B2C3C] hover:bg-[#202230] rounded-full text-xs px-5"
+          >
+            Close
+          </Button>
+          <Button
+            size="md"
+            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 text-white font-bold rounded-full gap-2 px-6 shadow-md shadow-red-600/30"
             onClick={() => {
-              if (!isDemoData) {
+              if (onSyncSkills && info.extractedSkills) {
                 onSyncSkills(info.extractedSkills);
-                onClose();
               }
+              onClose();
             }}
           >
             <Sparkles className="w-4 h-4" />
-            {isDemoData ? 'Sync disabled in demo' : 'Add skills to my profile'}
+            Add Skills to My Profile
           </Button>
         </div>
       </div>

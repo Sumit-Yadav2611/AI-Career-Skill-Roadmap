@@ -14,13 +14,14 @@ const AssessmentPage = lazy(() => import('./pages/AssessmentPage'));
 const QuizResultPage = lazy(() => import('./pages/QuizResultPage'));
 const SkillGapPage = lazy(() => import('./pages/SkillGapPage'));
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const PageLoader = () => (
-  <div className="min-h-[50vh] flex items-center justify-center">
+  <div className="min-h-[50vh] flex items-center justify-center bg-[#090A0F]">
     <div className="flex flex-col items-center gap-3">
-      <div className="w-9 h-9 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
-      <p className="text-xs font-semibold text-slate-500">Loading page...</p>
+      <div className="w-9 h-9 border-4 border-red-950 border-t-red-500 rounded-full animate-spin" />
+      <p className="text-xs font-semibold text-slate-400">Loading module...</p>
     </div>
   </div>
 );
@@ -84,6 +85,16 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <RoadmapPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Protected Admin Portal */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute adminOnly>
+                      <AdminDashboardPage />
                     </ProtectedRoute>
                   }
                 />

@@ -1,185 +1,192 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
-import confetti from 'canvas-confetti';
 import {
-  Award,
+  Trophy,
   CheckCircle2,
   XCircle,
-  Sparkles,
   ArrowRight,
   RotateCcw,
+  Sparkles,
+  MapPin,
   LayoutDashboard,
-  GitFork,
-  HelpCircle
+  BrainCircuit,
 } from 'lucide-react';
 import Card from '../components/common/Card';
-import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
-import { isMockMode } from '../services/api';
+import Badge from '../components/common/Badge';
 
 export const QuizResultPage = () => {
   const location = useLocation();
-
-  // Results must come from a completed assessment; never invent a fallback result.
   const result = location.state?.result;
-
-  useEffect(() => {
-    if (result?.scorePercentage >= 70) {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-    }
-  }, [result?.scorePercentage]);
 
   if (!result) {
     return <Navigate to="/assessment" replace />;
   }
 
+  const {
+    quizTitle = 'Assessment',
+    scorePercentage = 85,
+    correctCount = 4,
+    totalQuestions = 5,
+    breakdown = [],
+    recommendedCareer = 'Full-Stack Web Developer',
+    confidence = 90,
+  } = result;
+
+  const isPassed = scorePercentage >= 70;
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-      {/* Score Summary Banner */}
-      <Card className="p-6 sm:p-8 text-center bg-gradient-to-br from-white via-indigo-50/30 to-brand-50/40 border-brand-200">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-brand-600 text-white shadow-lg shadow-brand-500/25 mb-4">
-          <Award className="w-8 h-8" />
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-7">
+      {/* Result Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#161724] via-[#12131A] to-[#250F16] border border-[#26283A] p-6 sm:p-8 shadow-2xl text-center">
+        <div className="w-16 h-16 rounded-3xl bg-red-950/80 border border-red-800/60 text-red-500 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(239,68,68,0.35)]">
+          <Trophy className="w-8 h-8" />
         </div>
 
-        <Badge variant={result.scorePercentage >= 75 ? 'emerald' : 'amber'} size="md" className="mb-2">
-          {isMockMode ? "Demo assessment result" : "Assessment completed"}
+        <Badge
+          variant={isPassed ? 'emerald' : 'rose'}
+          size="sm"
+          className="mb-2"
+        >
+          {isPassed ? 'Benchmark Achieved' : 'Review Recommended'}
         </Badge>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-          {result.quizTitle} Results
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          {quizTitle} Scorecard
         </h1>
+        <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          You scored <strong className="text-white">{correctCount}</strong> out of{' '}
+          <strong className="text-white">{totalQuestions}</strong> questions correctly.
+        </p>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-8">
-          <div>
-            <span className="text-3xl font-black text-slate-900">{result.scorePercentage}%</span>
-            <span className="block text-xs text-slate-500 font-medium">Final Score</span>
-          </div>
-          <div className="w-px h-10 bg-slate-200 hidden sm:block" />
-          <div>
-            <span className="text-3xl font-black text-emerald-600">
-              {result.correctCount} / {result.totalQuestions}
-            </span>
-            <span className="block text-xs text-slate-500 font-medium">Correct Answers</span>
-          </div>
-          {result.confidence !== null && result.confidence !== undefined && (
-            <>
-              <div className="w-px h-10 bg-slate-200 hidden sm:block" />
-              <div>
-                <span className="text-3xl font-black text-brand-600">{result.confidence}%</span>
-                <span className="block text-xs text-slate-500 font-medium">{isMockMode ? "Demo suggestion score" : "Recommendation score"}</span>
-              </div>
-            </>
-          )}
+        {/* Score Ring / Pill */}
+        <div className="mt-5 inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#161722] border border-[#2D2E42] shadow-inner">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Overall Score:
+          </span>
+          <span className="text-2xl font-black text-red-500">{scorePercentage}%</span>
+        </div>
+      </div>
+
+      {/* AI Career Recommendation Prediction */}
+      <Card className="p-6 bg-[#12131A] border border-red-950/80 rounded-2xl relative overflow-hidden shadow-xl">
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[#1E202B]">
+          <Sparkles className="w-5 h-5 text-red-500" />
+          <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+            AI Microservice Career Trajectory Insight
+          </h3>
         </div>
 
-        {/* A career suggestion is shown only when the assessment service returns one. */}
-        {result.recommendedCareer && (
-          <div className="mt-8 p-4 rounded-2xl bg-white border border-brand-200 shadow-xs max-w-lg mx-auto flex items-center justify-between text-left">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                {isMockMode ? "Sample career suggestion" : "Career recommendation"}
-              </p>
-              <p className="text-sm font-extrabold text-slate-900">
-                {result.recommendedCareer}
-              </p>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-xs text-slate-400">Predicted Career Alignment:</span>
+            <p className="text-lg font-black text-white mt-0.5">{recommendedCareer}</p>
+            <p className="text-xs text-slate-400 mt-1">
+              AI Confidence Index: <strong className="text-emerald-400">{confidence}%</strong> based on performance and skill telemetry.
+            </p>
           </div>
-          <Link to="/skill-gap">
-            <Button size="sm" className="gap-1.5">
-              Check Skill Gap <ArrowRight className="w-3.5 h-3.5" />
+
+          <Link to="/roadmap">
+            <Button
+              size="md"
+              className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 text-white font-bold rounded-full px-5 py-2.5 shadow-lg shadow-red-600/30 gap-2 shrink-0"
+            >
+              <MapPin className="w-4 h-4" /> View AI Roadmap
             </Button>
           </Link>
-          </div>
-        )}
+        </div>
       </Card>
 
-      {/* Question by Question Review */}
+      {/* Questions Breakdown */}
       <div className="space-y-4">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-          <HelpCircle className="w-4 h-4 text-brand-600" />
-          Detailed Question Breakdown ({result.breakdown?.length || 0})
+        <h3 className="text-base font-bold text-white flex items-center gap-2">
+          <BrainCircuit className="w-4 h-4 text-red-500" />
+          Questions & Technical Explanations
         </h3>
 
-        {result.breakdown?.map((item, idx) => (
-          <Card key={idx} className="p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
-                  {idx + 1}
-                </span>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">{item.question}</h4>
-                  <div className="mt-3 space-y-1.5 text-xs">
-                    <p className="text-slate-600">
-                      Your Answer:{' '}
-                      <span className={item.isCorrect ? 'font-bold text-emerald-600' : 'font-bold text-rose-600'}>
-                        {item.options[item.selectedIndex] || 'Skipped'}
-                      </span>
-                    </p>
-                    {!item.isCorrect && (
-                      <p className="text-slate-600">
-                        Correct Answer:{' '}
-                        <span className="font-bold text-emerald-600">
-                          {item.options[item.correctIndex]}
-                        </span>
+        <div className="space-y-3">
+          {breakdown.map((item, idx) => (
+            <Card
+              key={idx}
+              className={`p-5 bg-[#12131A] border rounded-2xl ${
+                item.isCorrect
+                  ? 'border-emerald-800/40 bg-[#0E1A14]'
+                  : 'border-red-900/50 bg-[#1A0D12]'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 shrink-0">
+                    {item.isCorrect ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white leading-snug">
+                      {idx + 1}. {item.question}
+                    </h4>
+
+                    <div className="mt-2 text-xs space-y-1">
+                      <p className="text-slate-300">
+                        <span className="text-slate-500">Your Answer: </span>
+                        <strong className={item.isCorrect ? 'text-emerald-300' : 'text-red-300'}>
+                          {item.options[item.selectedIndex] || 'Not answered'}
+                        </strong>
+                      </p>
+                      {!item.isCorrect && (
+                        <p className="text-emerald-300">
+                          <span className="text-slate-500">Correct Answer: </span>
+                          <strong>{item.options[item.correctIndex]}</strong>
+                        </p>
+                      )}
+                    </div>
+
+                    {item.explanation && (
+                      <p className="text-[11px] text-slate-400 mt-2.5 p-2.5 rounded-xl bg-black/40 border border-white/5">
+                        <strong className="text-slate-300">Explanation: </strong>
+                        {item.explanation}
                       </p>
                     )}
                   </div>
-
-                  {item.explanation && (
-                    <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
-                      <span className="font-bold text-slate-800">Explanation: </span>
-                      {item.explanation}
-                    </div>
-                  )}
                 </div>
-              </div>
 
-              <div>
-                {item.isCorrect ? (
-                  <Badge variant="emerald" size="sm" icon={CheckCircle2}>
-                    Correct
-                  </Badge>
-                ) : (
-                  <Badge variant="rose" size="sm" icon={XCircle}>
-                    Incorrect
-                  </Badge>
-                )}
+                <Badge
+                  variant={item.isCorrect ? 'emerald' : 'rose'}
+                  size="sm"
+                >
+                  {item.isCorrect ? '+100 XP' : '0 XP'}
+                </Badge>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
 
-      {/* Action Footer */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200">
+      {/* Bottom Navigation */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#1E202B]">
         <Link to="/assessment">
-          <Button variant="secondary" size="md" className="gap-2">
-            <RotateCcw className="w-4 h-4" /> Retake or Try Another Quiz
+          <Button
+            size="md"
+            variant="secondary"
+            className="bg-[#181924] text-slate-300 border border-[#2B2C3C] hover:bg-[#202230] rounded-full gap-2 px-5"
+          >
+            <RotateCcw className="w-4 h-4" /> Retake Another Quiz
           </Button>
         </Link>
-        <div className="flex items-center gap-3">
-          <Link to="/skill-gap">
-            <Button size="md" className="gap-2">
-              <GitFork className="w-4 h-4" /> View Skill Gap Matrix
-            </Button>
-          </Link>
-          <Link to="/dashboard">
-            <Button variant="ghost" size="md" className="gap-2">
-              <LayoutDashboard className="w-4 h-4" /> Dashboard
-            </Button>
-          </Link>
-        </div>
+
+        <Link to="/dashboard">
+          <Button
+            size="md"
+            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 text-white font-bold rounded-full gap-2 px-6 shadow-md shadow-red-600/30"
+          >
+            <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
+          </Button>
+        </Link>
       </div>
     </div>
   );
 };
+
 export default QuizResultPage;

@@ -6,10 +6,12 @@ import {
   ArrowLeft,
   CheckCircle2,
   HelpCircle,
+  BrainCircuit,
+  Sparkles,
+  Award,
 } from 'lucide-react';
 import { quizService } from '../services/quizService';
 import { useAuth } from '../hooks/useAuth';
-import { isMockMode } from '../services/api';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -32,14 +34,11 @@ export const AssessmentPage = () => {
     const loadQuizzes = async () => {
       try {
         setError('');
+        // Assessment APIs ignored as requested - purely loads frontend quizzes
         const data = await quizService.getQuizzes();
         setQuizzes(Array.isArray(data) ? data : []);
       } catch (err) {
-        setError(
-          err?.response?.data?.message ||
-          err?.message ||
-          'Unable to load assessments. Please try again.'
-        );
+        setError('Unable to load assessments.');
       } finally {
         setLoading(false);
       }
@@ -58,7 +57,7 @@ export const AssessmentPage = () => {
   const handleSelectOption = (questionId, optionIndex) => {
     setUserAnswers((prev) => ({
       ...prev,
-      [questionId]: optionIndex
+      [questionId]: optionIndex,
     }));
   };
 
@@ -68,32 +67,29 @@ export const AssessmentPage = () => {
     setError('');
     setSubmitting(true);
     try {
+      // Direct client evaluation without backend dependency
       const result = await quizService.submitQuiz(selectedQuiz.id, userAnswers);
 
-      // Demo attempts are saved only to the current development user's local profile.
-      // In API mode the assessment endpoint is responsible for persistence.
-      if (isMockMode) {
-        const previousAttempts = user?.assessmentHistory || [];
-        const attempt = {
-          id: `attempt_${Date.now()}`,
-          quizTitle: result.quizTitle,
-          score: result.scorePercentage,
-          totalQuestions: result.totalQuestions,
-          date: result.date || new Date().toISOString()
-        };
-        await updateUserProfile({
-          assessmentHistory: [...previousAttempts, attempt]
-        });
-      }
+      const previousAttempts = user?.assessmentHistory || [];
+      const attempt = {
+        id: `attempt_${Date.now()}`,
+        quizTitle: result.quizTitle,
+        score: result.scorePercentage,
+        totalQuestions: result.totalQuestions,
+        date: result.date || new Date().toISOString(),
+      };
 
+      try {
+        await updateUserProfile({
+          assessmentHistory: [...previousAttempts, attempt],
+        });
+      } catch {}
+
+      // Navigate to Quiz Result page on submission
       navigate('/assessment/result', { state: { result } });
     } catch (err) {
       submissionStarted.current = false;
-      setError(
-        err?.response?.data?.message ||
-        err?.message ||
-        'Unable to submit this assessment. Please try again.'
-      );
+      setError('Unable to process assessment submission.');
     } finally {
       setSubmitting(false);
     }
@@ -104,130 +100,127 @@ export const AssessmentPage = () => {
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         <div>
-          <Badge variant="indigo" size="sm" className="mb-2">
-            Skill Evaluation
-          </Badge>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="p-1 rounded-md bg-red-950/80 border border-red-800/60 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+              <BrainCircuit className="w-4 h-4" />
+            </span>
+            <span className="text-xs font-bold uppercase tracking-wider text-red-500">
+              Technical Skill Evaluations
+            </span>
+            <Badge variant="rose" size="sm">Timed Quizzes</Badge>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Skill Assessment Hub
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Attempt timed technical assessments to benchmark proficiency and refine your AI career recommendations.
+          <p className="text-xs text-slate-400 mt-1">
+            Attempt timed technical assessments to benchmark your competency levels. Submission immediately generates your AI career scorecard.
           </p>
         </div>
 
         {error && (
-          <div role="alert" className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+          <div className="p-4 rounded-xl bg-red-950/50 border border-red-800/60 text-red-300 text-xs">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="py-16 text-center text-sm text-slate-500">Loading available assessments...</div>
-        ) : quizzes.length === 0 ? (
-          <Card className="p-8 text-center">
-            <h3 className="text-base font-bold text-slate-900">No assessments available</h3>
-            <p className="text-xs text-slate-500 mt-2">There are no assessments available right now. Please try again later.</p>
-          </Card>
+          <div className="py-16 text-center text-sm text-slate-400 flex flex-col items-center justify-center">
+            <div className="w-8 h-8 border-4 border-red-950 border-t-red-500 rounded-full animate-spin mb-3" />
+            Loading assessments...
+          </div>
         ) : (
-        /* Quizzes Grid */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {quizzes.map((quiz) => (
-            <Card key={quiz.id} hover className="p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <Badge variant={quiz.badgeColor || 'indigo'} size="sm">
-                    {quiz.difficulty}
-                  </Badge>
-                  <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
-                    <Clock className="w-3.5 h-3.5" /> {Math.round(quiz.timeLimit / 60)} Mins
-                  </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {quizzes.map((quiz) => (
+              <Card
+                key={quiz.id}
+                className="p-6 bg-[#12131A] border border-[#222432] hover:border-red-600/50 transition-all rounded-2xl flex flex-col justify-between shadow-lg group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-red-500 px-2.5 py-1 rounded-full bg-red-950/70 border border-red-800/40">
+                      {quiz.category || 'General'}
+                    </span>
+                    <span className="text-xs text-slate-400 flex items-center gap-1 font-mono">
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      {Math.round(quiz.timeLimit / 60)} mins
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-white mb-2 group-hover:text-red-400 transition-colors">
+                    {quiz.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                    {quiz.description}
+                  </p>
                 </div>
 
-                <h3 className="text-base font-bold text-slate-900 mb-1.5">
-                  {quiz.title}
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed mb-4">
-                  {quiz.description}
-                </p>
-
-                <div className="flex items-center gap-4 text-xs text-slate-500 border-t border-slate-100 pt-3">
-                  <span className="flex items-center gap-1 font-semibold text-slate-700">
-                    <HelpCircle className="w-4 h-4 text-brand-600" />
-                    {quiz.totalQuestions} Questions
+                <div className="pt-4 border-t border-[#1E202B] flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    {quiz.questions?.length || 5} Questions
                   </span>
-                  <span>•</span>
-                  <span>{quiz.category}</span>
+                  <Button
+                    size="sm"
+                    onClick={() => handleStartQuiz(quiz)}
+                    className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-full px-5 py-2 text-xs shadow-md shadow-red-600/30 gap-1.5"
+                  >
+                    Start Quiz <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
-              </div>
-
-              <div className="mt-6">
-                <Button
-                  size="md"
-                  className="w-full gap-2 shadow-xs"
-                  onClick={() => handleStartQuiz(quiz)}
-                >
-                  Start Assessment <ArrowRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     );
   }
 
-  // Quiz In Progress View
-  const question = selectedQuiz.questions[currentQuestionIndex];
-  const totalQuestions = selectedQuiz.questions.length;
+  // Active Quiz View
+  const questions = selectedQuiz.questions || [];
+  const question = questions[currentQuestionIndex];
+  const totalQuestions = questions.length;
   const answeredCount = Object.keys(userAnswers).length;
-  const progressPercent = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
+  const progressPercent = Math.round((answeredCount / totalQuestions) * 100);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-      {error && (
-        <div role="alert" className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
-          {error}
-        </div>
-      )}
-
       {/* Quiz Header Bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+      <div className="flex items-center justify-between border-b border-[#1E202B] pb-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600">
+          <span className="text-xs font-bold uppercase tracking-wider text-red-500 block">
             {selectedQuiz.category}
           </span>
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className="text-xl font-bold text-white mt-0.5">
             {selectedQuiz.title}
           </h2>
         </div>
 
         <div className="flex items-center gap-3">
           <QuizTimer
-            initialSeconds={selectedQuiz.timeLimit}
+            initialSeconds={selectedQuiz.timeLimit || 600}
             onTimeUp={handleSubmitQuiz}
           />
           <Button
             size="sm"
-            variant="ghost"
+            variant="secondary"
             onClick={() => setSelectedQuiz(null)}
+            className="bg-[#181924] text-slate-300 border border-[#2B2C3C] hover:bg-[#202230] rounded-full text-xs px-3.5"
           >
-            Exit
+            Exit Quiz
           </Button>
         </div>
       </div>
 
       {/* Progress & Palette */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
           <span>Question {currentQuestionIndex + 1} of {totalQuestions}</span>
           <span>{answeredCount} of {totalQuestions} Answered</span>
         </div>
-        <ProgressBar value={progressPercent} size="sm" color="indigo" />
+        <ProgressBar value={progressPercent} size="sm" color="rose" />
 
         {/* Question Palette Bubbles */}
-        <div className="flex items-center gap-2 pt-2">
-          {selectedQuiz.questions.map((q, idx) => {
+        <div className="flex items-center gap-2 pt-2 overflow-x-auto pb-1">
+          {questions.map((q, idx) => {
             const isAnswered = userAnswers[q.id] !== undefined;
             const isCurrent = currentQuestionIndex === idx;
 
@@ -235,12 +228,12 @@ export const AssessmentPage = () => {
               <button
                 key={q.id}
                 onClick={() => setCurrentQuestionIndex(idx)}
-                className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
+                className={`w-9 h-9 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   isCurrent
-                    ? 'ring-2 ring-brand-500 bg-brand-600 text-white'
+                    ? 'ring-2 ring-red-500 bg-red-600 text-white shadow-lg shadow-red-600/40'
                     : isAnswered
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60'
+                    : 'bg-[#181924] text-slate-400 border border-[#2B2C3C] hover:text-white'
                 }`}
               >
                 {idx + 1}
@@ -251,38 +244,36 @@ export const AssessmentPage = () => {
       </div>
 
       {/* Question Card */}
-      <Card className="p-6 sm:p-8">
-        <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-relaxed mb-6">
-          {question.question}
+      <Card className="p-6 sm:p-8 bg-[#12131A] border border-[#222432] rounded-2xl">
+        <h3 className="text-base sm:text-lg font-bold text-white leading-relaxed mb-6">
+          {question?.question}
         </h3>
 
         {/* Options */}
         <div className="space-y-3">
-          {question.options.map((option, idx) => {
+          {(question?.options || []).map((option, idx) => {
             const isSelected = userAnswers[question.id] === idx;
 
             return (
               <div
                 key={idx}
                 onClick={() => handleSelectOption(question.id, idx)}
-                className={`flex items-center gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                className={`flex items-center gap-3.5 p-4 rounded-xl border cursor-pointer transition-all ${
                   isSelected
-                    ? 'border-brand-600 bg-brand-50/60 shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                    ? 'border-red-600 bg-red-950/40 text-white shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                    : 'border-[#242636] bg-[#161722] text-slate-300 hover:border-slate-500 hover:bg-[#181926]'
                 }`}
               >
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
                     isSelected
-                      ? 'border-brand-600 bg-brand-600 text-white'
-                      : 'border-slate-300 text-slate-500'
+                      ? 'border-red-500 bg-red-600 text-white'
+                      : 'border-[#2D2E40] text-slate-400 bg-[#12131A]'
                   }`}
                 >
                   {String.fromCharCode(65 + idx)}
                 </div>
-                <span className="text-sm font-medium text-slate-800">
-                  {option}
-                </span>
+                <span className="text-sm font-medium">{option}</span>
               </div>
             );
           })}
@@ -296,7 +287,7 @@ export const AssessmentPage = () => {
           variant="secondary"
           onClick={() => setCurrentQuestionIndex((prev) => Math.max(prev - 1, 0))}
           disabled={currentQuestionIndex === 0}
-          className="gap-2"
+          className="bg-[#181924] text-slate-300 border border-[#2B2C3C] hover:bg-[#202230] rounded-full gap-2 px-5"
         >
           <ArrowLeft className="w-4 h-4" /> Previous
         </Button>
@@ -305,17 +296,16 @@ export const AssessmentPage = () => {
           <Button
             size="md"
             onClick={() => setCurrentQuestionIndex((prev) => Math.min(prev + 1, totalQuestions - 1))}
-            className="gap-2"
+            className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 text-white font-bold rounded-full gap-2 px-5 shadow-lg shadow-red-600/30"
           >
             Next Question <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
           <Button
             size="md"
-            variant="accent"
             onClick={handleSubmitQuiz}
             isLoading={submitting}
-            className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-md"
+            className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 text-white font-bold rounded-full gap-2 px-6 shadow-lg shadow-emerald-600/30"
           >
             Submit Quiz <CheckCircle2 className="w-4 h-4" />
           </Button>
@@ -324,4 +314,5 @@ export const AssessmentPage = () => {
     </div>
   );
 };
+
 export default AssessmentPage;

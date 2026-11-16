@@ -1,46 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Compass,
   Mail,
   Lock,
   User,
-  GraduationCap,
   Sparkles,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useRoadmap } from '../hooks/useRoadmap';
-import { isMockMode } from '../services/api';
+import { authService } from '../services/authService';
 import Button from '../components/common/Button';
 import FormInput from '../components/common/FormInput';
 
 export const RegisterPage = () => {
   const { register } = useAuth();
-  const { careers } = useRoadmap();
   const navigate = useNavigate();
+
+  // Call backend link as soon as user opens the Register page
+  useEffect(() => {
+    authService.prewarmBackend();
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    college: '',
-    degree: '',
-    branch: '',
-    semester: '',
-    cgpa: '',
-    targetCareerId: ''
+    isAdmin: false,
   });
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -58,115 +57,114 @@ export const RegisterPage = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (formData.password.length < 8) {
+      setError('Password must contain at least 8 characters (backend requirement).');
       return;
     }
 
     try {
       setLoading(true);
-      await register(formData);
-      navigate('/dashboard');
+      const res = await register(formData);
+      if (formData.isAdmin || res?.user?.isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
-      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+      setError(
+        err?.message ||
+        'Registration failed. Please check backend connection or verify email uniqueness.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-[#090A0F] text-white">
       {/* Left Pane */}
-      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-slate-900 via-indigo-950 to-brand-950 p-12 flex-col justify-between text-white relative">
-        <div>
+      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-[#12131A] via-[#0E0F16] to-[#1A0B10] p-12 flex-col justify-between text-white relative border-r border-[#1E202B]">
+        <div className="absolute top-1/4 -left-16 w-80 h-80 bg-red-600/15 blur-3xl pointer-events-none rounded-full" />
+
+        <div className="relative z-10">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-lg">
-              <Compass className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-700 to-red-500 flex items-center justify-center text-white shadow-lg shadow-red-600/30">
+              <Compass className="w-6 h-6" />
             </div>
-            <span className="font-extrabold text-lg tracking-tight text-white">
-              CareerPath <span className="text-brand-400">AI</span>
+            <span className="font-black text-xl tracking-tight text-white">
+              CareerPath <span className="text-red-500">AI</span>
             </span>
           </Link>
 
           <div className="mt-16 max-w-sm">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-semibold mb-4">
-              <Sparkles className="w-3.5 h-3.5" /> Fast Onboarding
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-red-950/70 border border-red-800/50 text-red-400 text-xs font-bold mb-4 shadow-[0_0_12px_rgba(239,68,68,0.25)]">
+              <Sparkles className="w-3.5 h-3.5" /> Rapid Onboarding
             </span>
-            <h2 className="text-2xl font-extrabold tracking-tight leading-snug">
-              Begin Your Placement Readiness Journey.
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-snug">
+              Begin Your AI-Powered Career Journey.
             </h2>
-            <p className="mt-3 text-xs text-slate-300 leading-relaxed">
-              Create your account first, then add your academic details, skills, and career interests to personalize your workspace.
+            <p className="mt-3 text-xs text-slate-400 leading-relaxed">
+              Create your account to unlock personalized roadmaps, resume ATS parsing, and benchmark assessments.
             </p>
           </div>
         </div>
 
-        <div className="text-[11px] text-slate-400">
-          SPMP AI-Based Career & Skill Roadmap Platform
-        </div>
+
       </div>
 
       {/* Right Pane: Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 overflow-y-auto">
         <div className="w-full max-w-lg space-y-6">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Create Student Account
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Create Your Account
             </h2>
-            <p className="mt-1.5 text-xs text-slate-500">
+            <p className="mt-1.5 text-xs text-slate-400">
               Already registered?{' '}
-              <Link to="/login" className="font-semibold text-brand-600 hover:text-brand-700">
+              <Link to="/login" className="font-bold text-red-500 hover:text-red-400 hover:underline">
                 Sign in here
               </Link>
             </p>
           </div>
 
-          {isMockMode && (
-            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
-              Development-only account: the profile is saved in this browser and the password is not verified. Do not enter real credentials or sensitive personal information.
-            </div>
-          )}
-
           {error && (
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-red-950/50 border border-red-800/60 text-red-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
               <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <FormInput
-                id="name"
-                name="name"
-                label="Full Name"
-                placeholder="e.g. Aarav Sharma"
-                icon={User}
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
+            <FormInput
+              id="name"
+              name="name"
+              label="Full Name"
+              placeholder="e.g. Aarav Sharma"
+              icon={User}
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
 
-              <FormInput
-                id="email"
-                name="email"
-                type="email"
-                label="College Email"
-                placeholder="aarav@college.edu"
-                icon={Mail}
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <FormInput
+              id="email"
+              name="email"
+              type="email"
+              label="Email Address"
+              placeholder="you@university.edu"
+              icon={Mail}
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
 
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-3">
               <FormInput
                 id="password"
                 name="password"
                 type="password"
-                label="Password"
-                placeholder="••••••••"
+                label="Password (min 8 chars)"
+                placeholder="Create strong password"
                 icon={Lock}
                 value={formData.password}
                 onChange={handleChange}
@@ -178,7 +176,7 @@ export const RegisterPage = () => {
                 name="confirmPassword"
                 type="password"
                 label="Confirm Password"
-                placeholder="••••••••"
+                placeholder="Repeat password"
                 icon={Lock}
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -186,125 +184,36 @@ export const RegisterPage = () => {
               />
             </div>
 
-            <div className="border-t border-slate-100 pt-4">
-              <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                Academic & Career Information
-              </p>
-
-              <div className="space-y-3">
-                <FormInput
-                  id="college"
-                  name="college"
-                  label="College / University Name"
-                  placeholder="e.g. National Institute of Technology"
-                  icon={GraduationCap}
-                  value={formData.college}
-                  onChange={handleChange}
-                />
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Degree
-                    </label>
-                    <select
-                      name="degree"
-                      value={formData.degree}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    >
-                      <option value="" disabled>Select degree</option>
-                      <option value="B.Tech">B.Tech</option>
-                      <option value="B.E.">B.E.</option>
-                      <option value="BCA">BCA</option>
-                      <option value="B.Sc">B.Sc</option>
-                      <option value="MCA">MCA</option>
-                      <option value="M.Tech">M.Tech</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Semester
-                    </label>
-                    <select
-                      name="semester"
-                      value={formData.semester}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    >
-                      <option value="" disabled>Select semester</option>
-                      <option value="1st Semester">1st Sem</option>
-                      <option value="2nd Semester">2nd Sem</option>
-                      <option value="3rd Semester">3rd Sem</option>
-                      <option value="4th Semester">4th Sem</option>
-                      <option value="5th Semester">5th Sem</option>
-                      <option value="6th Semester">6th Sem</option>
-                      <option value="7th Semester">7th Sem</option>
-                      <option value="8th Semester">8th Sem</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                      Current CGPA
-                    </label>
-                    <input
-                      name="cgpa"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="10"
-                      value={formData.cgpa}
-                      onChange={handleChange}
-                      placeholder="Enter actual CGPA"
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                </div>
-
+            {/* Admin toggle checkbox */}
+            <div className="p-3.5 rounded-xl bg-[#12131A] border border-[#222432] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <ShieldAlert className="w-4 h-4 text-red-500" />
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Branch / Specialization
+                  <label htmlFor="isAdmin" className="text-xs font-bold text-white cursor-pointer block">
+                    Register as Administrator
                   </label>
-                  <input
-                    name="branch"
-                    type="text"
-                    value={formData.branch}
-                    onChange={handleChange}
-                    placeholder="e.g. Computer Science"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Target Career Role (Optional)
-                  </label>
-                  <select
-                    name="targetCareerId"
-                    value={formData.targetCareerId}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
-                  >
-                    <option value="">Choose later</option>
-                    {careers.map((career) => (
-                      <option key={career.id} value={career.id}>
-                        {career.title}
-                      </option>
-                    ))}
-                  </select>
+                  <p className="text-[11px] text-slate-400">
+                    Enables access to the Admin Portal on the hamburger menu.
+                  </p>
                 </div>
               </div>
+              <input
+                id="isAdmin"
+                name="isAdmin"
+                type="checkbox"
+                checked={formData.isAdmin}
+                onChange={handleChange}
+                className="w-4 h-4 rounded text-red-600 focus:ring-red-500 bg-[#181924] border-[#2E3042] cursor-pointer"
+              />
             </div>
 
             <Button
               type="submit"
               size="lg"
-              className="w-full mt-4 shadow-md shadow-brand-500/20"
+              className="w-full mt-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-full shadow-lg shadow-red-600/35"
               isLoading={loading}
             >
-              Complete Registration & Enter Dashboard <ArrowRight className="w-4 h-4 ml-1" />
+              Complete Registration <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </form>
         </div>
@@ -312,4 +221,5 @@ export const RegisterPage = () => {
     </div>
   );
 };
+
 export default RegisterPage;

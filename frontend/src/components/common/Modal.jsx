@@ -31,26 +31,26 @@ export const Modal = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal dialog */}
       <div
-        className={`relative w-full ${maxWidth} bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all z-10 my-8`}
+        className={`relative w-full ${maxWidth} bg-[#12131A] rounded-2xl shadow-2xl border border-[#2B2C3E] overflow-hidden transform transition-all z-10 my-8 text-white`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {(title || onClose) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#1E202B] bg-[#161722]">
             <div>
-              {title && <h3 className="text-lg font-bold text-slate-900">{title}</h3>}
-              {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+              {title && <h3 className="text-base sm:text-lg font-bold text-white">{title}</h3>}
+              {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
             </div>
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#1E202C] transition-colors"
                 aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
@@ -65,4 +65,5 @@ export const Modal = ({
     </div>
   );
 };
+
 export default Modal;

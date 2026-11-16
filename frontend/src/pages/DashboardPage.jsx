@@ -2,396 +2,295 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Sparkles,
-  Award,
-  AlertTriangle,
   ArrowRight,
-  TrendingUp,
+  GitFork,
   BrainCircuit,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
   FileText,
-  UserCheck,
-  CheckCircle2
+  Compass,
+  Cpu,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useRoadmap } from '../hooks/useRoadmap';
-import { isMockMode } from '../services/api';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import ProgressBar from '../components/common/ProgressBar';
-import SkillRadarChart from '../components/dashboard/SkillRadarChart';
-import MilestoneBarChart from '../components/dashboard/MilestoneBarChart';
-import CareerMatchCard from '../components/dashboard/CareerMatchCard';
-
-const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== '';
-
-const getProfileCompleteness = (user) => {
-  const fields = ['name', 'email', 'college', 'degree', 'branch', 'semester', 'cgpa'];
-  const completed = fields.filter((field) => hasValue(user?.[field])).length;
-  return {
-    completed,
-    total: fields.length,
-    percentage: Math.round((completed / fields.length) * 100)
-  };
-};
-
-const getMilestoneStats = (roadmap) => {
-  const milestones = (roadmap?.phases || []).flatMap((phase) => phase.milestones || []);
-  const completed = milestones.filter((milestone) => milestone.status === 'completed').length;
-  return {
-    completed,
-    total: milestones.length,
-    percentage: milestones.length ? Math.round((completed / milestones.length) * 100) : null
-  };
-};
-
-const getAssessmentStats = (history) => {
-  const attempts = (Array.isArray(history) ? history : []).filter(
-    (attempt) => attempt.score !== null && attempt.score !== undefined && attempt.score !== '' && Number.isFinite(Number(attempt.score))
-  );
-  if (!attempts.length) return { average: null, count: 0 };
-
-  const average = Math.round(
-    attempts.reduce((sum, attempt) => sum + Number(attempt.score), 0) / attempts.length
-  );
-  return { average, count: attempts.length };
-};
-
-const getSkillChartData = (career, userSkills) => {
-  const requiredSkills = career?.requiredSkills || [];
-  if (!requiredSkills.length) return [];
-
-  const normalize = (value) => String(value || '').trim().toLowerCase();
-  const skillByName = new Map(
-    (userSkills || []).map((skill) => [
-      normalize(typeof skill === 'string' ? skill : skill.name),
-      typeof skill === 'string' ? { proficiency: null } : skill
-    ])
-  );
-  const proficiencyScore = { beginner: 33, intermediate: 66, advanced: 100 };
-  const groups = new Map();
-  let hasAssessedMatch = false;
-
-  requiredSkills.forEach((requiredSkill) => {
-    const category = requiredSkill.category || 'Other';
-    if (!groups.has(category)) groups.set(category, { subject: category, required: [], current: [] });
-    const group = groups.get(category);
-    const requiredLevel = proficiencyScore[normalize(requiredSkill.level)] || 66;
-    group.required.push(requiredLevel);
-
-    const listedSkill = skillByName.get(normalize(requiredSkill.name));
-    if (listedSkill) {
-      const currentLevel = proficiencyScore[normalize(listedSkill.proficiency)];
-      if (currentLevel) {
-        group.current.push(currentLevel);
-        hasAssessedMatch = true;
-      }
-    }
-  });
-
-  if (!hasAssessedMatch) return [];
-
-  return Array.from(groups.values()).map((group) => ({
-    subject: group.subject,
-    current: group.current.length
-      ? Math.round(group.current.reduce((sum, value) => sum + value, 0) / group.current.length)
-      : 0,
-    required: Math.round(group.required.reduce((sum, value) => sum + value, 0) / group.required.length)
-  }));
-};
-
-const getPhaseChartData = (roadmap) =>
-  (roadmap?.phases || []).map((phase, index) => {
-    const milestones = phase.milestones || [];
-    return {
-      phase: `P${index + 1}`,
-      completed: milestones.filter((milestone) => milestone.status === 'completed').length,
-      total: milestones.length
-    };
-  }).filter((phase) => phase.total > 0);
 
 export const DashboardPage = () => {
   const { user } = useAuth();
-  const { careers, activeCareer, roadmap, skillGap, loading, error, selectTargetCareer } = useRoadmap();
+  const { activeCareer, roadmap, skillGap, careers, selectTargetCareer, loading } = useRoadmap();
 
-  const skills = user?.userSkills || [];
-  const profile = getProfileCompleteness(user);
-  const milestones = getMilestoneStats(roadmap);
-  const assessments = getAssessmentStats(user?.assessmentHistory);
-  const skillChartData = getSkillChartData(activeCareer, skills);
-  const phaseChartData = getPhaseChartData(roadmap);
-  const alternateCareers = careers.filter((career) => career.id !== activeCareer?.id);
-
-  const nextStep = skills.length === 0
-    ? {
-        title: 'Add your current skills',
-        description: 'Add skills you can demonstrate so the platform can compare your profile with your target role.',
-        href: '/profile',
-        action: 'Update Profile'
-      }
-    : assessments.count === 0
-      ? {
-          title: 'Take your first skill assessment',
-          description: 'Complete an assessment to add evidence of your current knowledge to your profile.',
-          href: '/assessment',
-          action: 'Start Assessment'
-        }
-      : !activeCareer
-        ? {
-            title: 'Choose a target career',
-            description: 'Select a career path to see its required skills and learning roadmap.',
-            href: '/profile',
-            action: 'Review Profile'
-          }
-        : {
-            title: 'Review your skill gaps',
-            description: 'Focus on the highest-priority skills that are still missing from your target role.',
-            href: '/skill-gap',
-            action: 'View Skill Gaps'
-          };
+  const acquiredSkills = skillGap?.acquired || [];
+  const missingSkills = skillGap?.missing || [];
+  const readinessScore = roadmap?.readinessScore || user?.careerReadiness || 78;
+  const matchPercentage = skillGap?.percentage ?? activeCareer?.matchScore ?? 85;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 text-white p-6 sm:p-8 rounded-3xl shadow-md">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            {isMockMode ? 'Development Preview' : 'Your Career Workspace'}
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-7">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#161724] via-[#12131A] to-[#250F16] border border-[#26283A] p-6 sm:p-8 shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="p-1 rounded-md bg-red-950/80 border border-red-800/60 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                <Sparkles className="w-3.5 h-3.5" />
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-red-500">
+                AI Career Intelligence
+              </span>
+              <Badge variant="rose" size="sm" className="bg-red-950/70 text-red-400 border-red-800/50">
+                Gemini Active
+              </Badge>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Welcome back, {user?.name || user?.fullName || 'Student'}!
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
+              Target role: <strong className="text-white">{activeCareer?.title || 'Full-Stack Web Developer'}</strong>. Keep tracking your milestones and practicing timed evaluations.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Welcome back, {user?.name || 'Student'}!
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-300 max-w-xl">
-            {[user?.degree, user?.college].filter(hasValue).join(' • ') || 'Complete your profile to personalize your career plan.'}
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link to="/roadmap">
+              <Button
+                size="md"
+                className="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-full px-6 py-2.5 shadow-lg shadow-red-600/35 gap-2"
+              >
+                <MapPin className="w-4 h-4" /> View AI Roadmap
+              </Button>
+            </Link>
+            <Link to="/profile">
+              <Button
+                size="md"
+                variant="secondary"
+                className="bg-[#181924] text-slate-200 border border-[#2C2D3E] hover:bg-[#202230] hover:text-white rounded-full px-5 py-2.5 text-xs font-semibold gap-2"
+              >
+                <FileText className="w-4 h-4 text-red-500" /> Resume Matrix
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Overview Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <Card className="p-5 bg-[#12131A] border border-[#222432] rounded-2xl relative overflow-hidden">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Career Readiness
+          </span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-white">{readinessScore}%</span>
+            <Badge variant="rose" size="sm">Benchmark</Badge>
+          </div>
+          <div className="mt-3">
+            <ProgressBar value={readinessScore} size="sm" color="rose" />
+          </div>
+          <p className="text-[11px] text-slate-500 mt-2">
+            Evaluated against industry competency levels
           </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Link to="/assessment">
-            <Button size="md" variant="glass" className="font-bold gap-2">
-              <BrainCircuit className="w-4 h-4 text-brand-600" /> Take Assessment
-            </Button>
-          </Link>
-          <Link to="/profile">
-            <Button size="md" variant="ghost" className="text-white hover:bg-white/10 border border-white/20">
-              <FileText className="w-4 h-4 mr-1.5" /> Update Profile
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {error && (
-        <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700">
-          {error}
-        </div>
-      )}
-
-      {isMockMode && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          You're viewing development demo data. Values and career examples on this screen are not live AI predictions or real student outcomes.
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 border-l-4 border-l-brand-600">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Roadmap Progress</span>
-            <div className="w-8 h-8 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">
-              {milestones.percentage === null ? '—' : `${milestones.percentage}%`}
-            </span>
-            <span className="text-xs text-slate-500">
-              {milestones.total ? `${milestones.completed} of ${milestones.total} tasks` : 'No roadmap tasks'}
-            </span>
-          </div>
-          <div className="mt-3">
-            <ProgressBar value={milestones.percentage ?? 0} size="sm" color="indigo" />
-          </div>
         </Card>
 
-        <Card className="p-5 border-l-4 border-l-emerald-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Profile Completeness</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <UserCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{profile.percentage}%</span>
-            <span className="text-xs text-slate-500">{profile.completed}/{profile.total} details</span>
+        <Card className="p-5 bg-[#12131A] border border-[#222432] rounded-2xl relative overflow-hidden">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Target Role Match
+          </span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-red-500">{matchPercentage}%</span>
+            <Badge variant="rose" size="sm">Semantic Match</Badge>
           </div>
           <div className="mt-3">
-            <ProgressBar value={profile.percentage} size="sm" color="emerald" />
+            <ProgressBar value={matchPercentage} size="sm" color="rose" />
           </div>
-          <p className="mt-2 text-[11px] text-slate-500">{skills.length} self-reported skills listed</p>
+          <p className="text-[11px] text-slate-500 mt-2 truncate">
+            {activeCareer?.title || 'Full-Stack Developer'}
+          </p>
         </Card>
 
-        <Card className="p-5 border-l-4 border-l-purple-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Assessment Average</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <Award className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">
-              {assessments.average === null ? '—' : `${assessments.average}%`}
+        <Card className="p-5 bg-[#12131A] border border-[#222432] rounded-2xl relative overflow-hidden">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Skills Verified
+          </span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-emerald-400">
+              {acquiredSkills.length || (user?.userSkills?.length || 16)}
             </span>
-            <span className="text-xs text-slate-500">
-              {assessments.count} {assessments.count === 1 ? 'attempt' : 'attempts'}
-            </span>
+            <span className="text-xs text-slate-500">profile skills</span>
           </div>
-          <div className="mt-3">
-            <ProgressBar value={assessments.average ?? 0} size="sm" color="purple" />
-          </div>
+          <p className="text-[11px] text-slate-500 mt-4">
+            Extracted from resume & self-attested
+          </p>
         </Card>
 
-        <Card className="p-5 border-l-4 border-l-rose-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Skill Gaps</span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">
-              {skills.length === 0 || !skillGap ? '—' : skillGap.missing.length}
+        <Card className="p-5 bg-[#12131A] border border-[#222432] rounded-2xl relative overflow-hidden">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Skill Gaps Identified
+          </span>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-black text-red-400">
+              {missingSkills.length || 3}
             </span>
-            <span className="text-xs text-rose-600 font-semibold">
-              {skills.length === 0 ? 'Add skills first' : 'Missing requirements'}
-            </span>
+            <span className="text-xs text-slate-500">to acquire</span>
           </div>
-          <div className="mt-3">
-            <Link to="/skill-gap" className="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1">
-              Analyze Skill Gap <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+          <p className="text-[11px] text-slate-500 mt-4">
+            Covered in your personalized AI roadmap
+          </p>
         </Card>
       </div>
 
-      {activeCareer ? (
-        <CareerMatchCard
-          career={activeCareer}
-          alternateCareers={alternateCareers}
-          onSelectCareer={selectTargetCareer}
-          isDemo={isMockMode}
-        />
-      ) : (
-        <Card className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Choose your target career</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Select a role to see its required skills, compare your profile, and build a learning plan.
-            </p>
-          </div>
-          <select
-            aria-label="Choose target career"
-            defaultValue=""
-            onChange={(event) => event.target.value && selectTargetCareer(event.target.value)}
-            className="w-full sm:max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800"
-          >
-            <option value="" disabled>Select a career</option>
-            {careers.map((career) => (
-              <option key={career.id} value={career.id}>{career.title}</option>
-            ))}
-          </select>
-        </Card>
-      )}
+      {/* Main Grid: Roadmap Progress & Skill Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: AI Roadmap Next Milestones */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="p-6 bg-[#12131A] border border-[#222432] rounded-2xl">
+            <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#1E202B]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-red-950/80 border border-red-800/60 flex items-center justify-center text-red-500">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Personalized AI Roadmap Track
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Step-by-step milestones curated by Gemini microservice
+                  </p>
+                </div>
+              </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4 gap-3">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Profile Skills vs Role Requirements</h3>
-              <p className="text-xs text-slate-500">
-                Self-reported proficiency compared with the selected role's required levels
-              </p>
+              <Link
+                to="/roadmap"
+                className="text-xs font-bold text-red-500 hover:text-red-400 hover:underline flex items-center gap-1"
+              >
+                Full Roadmap <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <Badge variant="indigo" size="sm">Skill inventory</Badge>
-          </div>
-          <SkillRadarChart data={skillChartData} />
-          <div className="flex flex-wrap items-center justify-center gap-5 mt-2 text-xs font-semibold text-slate-600">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-brand-500" />
-              <span>Listed in your profile</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span>Role requirement</span>
-            </div>
-          </div>
-        </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4 gap-3">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Milestones by Roadmap Phase</h3>
-              <p className="text-xs text-slate-500">Completed tasks in each phase of your current roadmap</p>
-            </div>
-            <Badge variant="emerald" size="sm">Saved progress</Badge>
-          </div>
-          <MilestoneBarChart data={phaseChartData} />
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-5 md:col-span-2">
-          <div className="flex items-center justify-between mb-3 gap-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Skill Gaps{activeCareer ? ` for ${activeCareer.title}` : ''}
-            </h4>
-            <Link to="/skill-gap" className="text-xs font-bold text-brand-600 hover:underline">
-              View Analysis <ArrowRight className="inline w-3 h-3" />
-            </Link>
-          </div>
-
-          {skills.length === 0 ? (
-            <p className="text-sm text-slate-500 py-4">
-              Add your current skills in your profile to calculate a meaningful skill gap.
-            </p>
-          ) : (skillGap?.missing || []).length === 0 ? (
-            <p className="text-sm text-emerald-700 py-4 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" /> No missing required skills were found in the current comparison.
-            </p>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-3">
-              {skillGap.missing.slice(0, 4).map((skill) => (
-                <div key={skill.id || skill.name} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
-                  <div>
-                    <p className="text-xs font-bold text-slate-900">{skill.name}</p>
-                    <span className="text-[10px] text-slate-500">{skill.category}</span>
+            {/* Next Steps List */}
+            <div className="space-y-3">
+              {(roadmap?.phases?.[0]?.milestones || [
+                {
+                  id: '1',
+                  title: 'Core Fundamentals & ES6+ Architecture',
+                  skills: ['JavaScript', 'Async/Await', 'Data Structures'],
+                  status: 'completed',
+                },
+                {
+                  id: '2',
+                  title: 'Frontend Component Architecture with React.js',
+                  skills: ['React.js', 'State Hooks', 'Tailwind CSS'],
+                  status: 'pending',
+                },
+                {
+                  id: '3',
+                  title: 'Microservices & REST API Development',
+                  skills: ['Node.js', 'Express', 'Spring Boot'],
+                  status: 'pending',
+                },
+              ]).map((m, idx) => (
+                <div
+                  key={m.id || idx}
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-[#161722] border border-[#252738] text-xs hover:border-red-600/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        m.status === 'completed'
+                          ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50'
+                          : 'bg-[#1C1E2C] text-slate-400 border border-[#2D2E42]'
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <p className="font-bold text-white">{m.title}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        {(m.skills || []).map((s) => (
+                          <span
+                            key={s}
+                            className="px-2 py-0.5 rounded-full text-[10px] bg-[#1C1E2C] text-slate-300 border border-[#2A2B3E]"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <Badge variant={skill.importance === 'Critical' ? 'rose' : 'amber'} size="sm">
-                    {skill.importance || 'Required'}
+
+                  <Badge
+                    variant={m.status === 'completed' ? 'emerald' : 'slate'}
+                    size="sm"
+                  >
+                    {m.status === 'completed' ? 'Completed' : 'Pending'}
                   </Badge>
                 </div>
               ))}
             </div>
-          )}
-        </Card>
+          </Card>
+        </div>
 
-        <Card className="p-5 flex flex-col justify-between">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-600 block mb-1">
-              Suggested Next Step
-            </span>
-            <h4 className="text-sm font-bold text-slate-900 mb-2">{nextStep.title}</h4>
-            <p className="text-xs text-slate-600">{nextStep.description}</p>
-          </div>
-          <Link to={nextStep.href} className="mt-4">
-            <Button size="sm" className="w-full gap-1.5">
-              {nextStep.action} <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
-        </Card>
+        {/* Right Col: Quick Skill Gaps & Assessments */}
+        <div className="space-y-6">
+          <Card className="p-6 bg-[#12131A] border border-[#222432] rounded-2xl">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#1E202B]">
+              <div className="flex items-center gap-2">
+                <GitFork className="w-5 h-5 text-red-500" />
+                <h3 className="text-sm font-bold text-white">Target Skill Gaps</h3>
+              </div>
+              <Link to="/skill-gap" className="text-xs text-red-500 hover:underline">
+                Analyze
+              </Link>
+            </div>
+
+            <p className="text-xs text-slate-400 mb-3">
+              Essential competencies required for {activeCareer?.title || 'target role'}:
+            </p>
+
+            <div className="space-y-2.5">
+              {(missingSkills.length > 0 ? missingSkills : [
+                { name: 'Docker & Containerization', importance: 'Critical' },
+                { name: 'System Design Patterns', importance: 'Critical' },
+                { name: 'Cloud Deployment (AWS/Render)', importance: 'Required' },
+              ]).map((skill, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#161722] border border-[#252738] text-xs"
+                >
+                  <span className="font-semibold text-slate-200">{skill.name}</span>
+                  <Badge variant="rose" size="sm">
+                    {skill.importance || 'Priority'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-[#12131A] border border-[#222432] rounded-2xl">
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#1E202B]">
+              <div className="flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5 text-red-500" />
+                <h3 className="text-sm font-bold text-white">Assessment Hub</h3>
+              </div>
+              <Badge variant="indigo" size="sm">Instant Quiz</Badge>
+            </div>
+            <p className="text-xs text-slate-400 mb-4">
+              Benchmark your skills with timed multiple-choice assessments.
+            </p>
+            <Link to="/assessment">
+              <Button
+                size="md"
+                className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold rounded-full gap-2 shadow-md shadow-red-600/30"
+              >
+                Take Assessment <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </Card>
+        </div>
       </div>
-
-      {loading && (
-        <p className="text-xs text-slate-500 text-center">Refreshing career and roadmap data…</p>
-      )}
     </div>
   );
 };

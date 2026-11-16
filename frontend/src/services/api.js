@@ -1,18 +1,21 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
+const rawBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
+// Normalize base URL so it cleanly ends with /api
+const baseURL = rawBaseURL.endsWith('/api')
+  ? rawBaseURL
+  : `${rawBaseURL.replace(/\/+$/, '')}/api`;
 
-// Mock data is a development-only convenience. A production build must always
-// use the configured API, even if VITE_USE_MOCK was accidentally set to true.
 export const isMockMode =
   import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === 'true';
 
 const api = axios.create({
   baseURL,
-  timeout: 10000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Request interceptor to attach JWT token
@@ -34,7 +37,11 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('csrp_token');
       localStorage.removeItem('csrp_user');
-      if (window.location.pathname !== '/login') {
+      if (
+        typeof window !== 'undefined' &&
+        window.location.pathname !== '/login' &&
+        window.location.pathname !== '/'
+      ) {
         window.location.href = '/login?expired=true';
       }
     }

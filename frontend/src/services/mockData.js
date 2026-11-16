@@ -1,6 +1,5 @@
 /**
- * Mock Data for AI-Based Career & Skill Roadmap Platform (CSRP)
- * Designed according to SPMP Document Lab 3 specifications.
+ * Mock Data for AI-Based Career & Skill Roadmap Platform
  */
 
 export const mockCareers = [
